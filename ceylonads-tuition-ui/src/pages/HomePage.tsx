@@ -24,6 +24,9 @@ import "./HomePage.css";
 // tuition CLAUDE.md. Pagination still moves through the rest via page/size on the same request.
 const HOMEPAGE_PAGE_SIZE = 9;
 
+// Temporarily hidden per request - flip back to true to restore the promo banner section.
+const SHOW_PROMO_BANNER = false;
+
 // The Featured Classes row reuses the shared CeylonAds CATEGORY_FEATURED promotion slot bound to
 // the Education & Tuition category (TUITION_FEATURED in LocalDataSeeder: capacity 12, visibleCount
 // 4 today) - the same slot /api/tuition/featured reads. `slotCapacity` is the *total* number of
@@ -136,9 +139,11 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="container tuition-home__section tuition-home__section--banner">
-        {promoBanner ? <PromotionBanner promotion={promoBanner} size="large" /> : <PromotionBannerSelfAd />}
-      </section>
+      {SHOW_PROMO_BANNER && (
+        <section className="container tuition-home__section tuition-home__section--banner">
+          {promoBanner ? <PromotionBanner promotion={promoBanner} size="large" /> : <PromotionBannerSelfAd />}
+        </section>
+      )}
 
       <section className="container tuition-home__section">
         <FeaturedTuitionCarousel

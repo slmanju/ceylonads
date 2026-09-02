@@ -13,20 +13,10 @@ import { ClassGrid } from "../../components/ClassGrid/ClassGrid";
 import { Pagination } from "../../components/Pagination/Pagination";
 import type { AdResponse, SortOption } from "../../types/api";
 import { tuitionRepository, searchTuitionClasses } from "../../tuition/api/tuitionApi";
-import { useSearchPromotions } from "../../hooks/useTuitionPromotions";
 import { useFeaturedTuition } from "../../hooks/useFeaturedTuition";
-import { PromotionBanner } from "../../components/Promotion/PromotionBanner";
-import { PromotionSidebar } from "../../components/Promotion/PromotionSidebar";
-import { FeaturedTuitionCarousel } from "../../components/FeaturedTuitionCarousel/FeaturedTuitionCarousel";
-import { SearchPromoCard } from "../../components/SearchPromoCard/SearchPromoCard";
-import { SearchPromoPlaceholderCard } from "../../components/SearchPromoCard/SearchPromoPlaceholderCard";
+import { SearchBoostSection } from "../../components/SearchBoostSection/SearchBoostSection";
 import { emptyClassFilterValues, type ClassFilterValues } from "../../tuition/model/searchFilters";
-import {
-  matchesTuitionCriteria,
-  type TuitionDetails,
-  type TuitionLevel,
-  type TuitionSearchCriteria,
-} from "../../tuition/model/tuition";
+import { matchesTuitionCriteria, type TuitionDetails, type TuitionSearchCriteria } from "../../tuition/model/tuition";
 import { getApiErrorMessage } from "../../utils/apiError";
 import "./ClassSearchResults.css";
 
@@ -37,14 +27,15 @@ const PAGE_SIZE = 9;
 
 // Tuition's "Search Boost" product (TUITION_SEARCH_BOOST) - promoted listings inside the search
 // experience, fetched separately via GET /api/tuition/featured?slot=TUITION_SEARCH_BOOST and
-// rendered as its own additive strip above the organic grid. Deliberately NOT mixed into the
-// organic `search` call above: TuitionClassService.search always returns exactly PAGE_SIZE (9)
-// purely organic results (see AdSearchService#search's applyPromotionBoost flag) so Search Boost
-// can never reduce the 9-per-page organic count or skew totalElements/totalPages. 20 matches
-// TUITION_SEARCH_BOOST's configured capacity (see V18__tuition_promotion_catalog_v2.sql); unsold
-// slots backfill with SearchPromoPlaceholderCard, same convention as every other promo carousel.
+// rendered as its own additive strip above the organic grid (see SearchBoostSection). Deliberately
+// NOT mixed into the organic `search` call above: TuitionClassService.search always returns
+// exactly PAGE_SIZE (9) purely organic results (see AdSearchService#search's applyPromotionBoost
+// flag) so Search Boost can never reduce the 9-per-page organic count or skew
+// totalElements/totalPages. Unlike TUITION_SEARCH_TOP's fixed page-advertising carousel, Search
+// Boost shows real promoted listings only - capped at 3 (SearchBoostSection's desktop maximum),
+// never backfilled with placeholder cards, and hidden entirely when nothing is active.
 const SEARCH_BOOST_SLOT = "TUITION_SEARCH_BOOST";
-const SEARCH_BOOST_SLOT_COUNT = 20;
+const SEARCH_BOOST_MAX_CARDS = 3;
 
 // classFormat/classPurpose remain a decorative, mock-provider-only layer applied client-side to
 // the already-fetched results page (see tuition/model/tuition.ts) - the backend has no such
@@ -142,26 +133,9 @@ export function ClassSearchResults({
   const effectiveCategory = fixedCategorySlug || activeFilters.category || tuitionRoot?.slug || "";
   const effectiveLocation = fixedLocationSlug || activeFilters.location;
 
-  const selectedSubjectLabel = tuitionFilters?.subjects.find((s) => s.value === activeFilters.subject)?.label;
-
-  const {
-    topBanner: searchTopBannerPromotion,
-    sidebarTop: searchSidebarTopPromotion,
-    sidebarMiddle: searchSidebarMiddlePromotion,
-    sidebarBottom: searchSidebarBottomPromotion,
-  } = useSearchPromotions({
-    categorySlug: effectiveCategory || undefined,
-    locationSlug: effectiveLocation || undefined,
-    // The real backend level values (PRIMARY/OL/AL/...) are exactly the TuitionLevel union used by
-    // the promotion matcher - see V10__tuition_filter_master_data.sql and tuition/model/tuition.ts.
-    levels: activeFilters.level ? [activeFilters.level as TuitionLevel] : undefined,
-    subjects: selectedSubjectLabel ? [selectedSubjectLabel] : undefined,
-  });
-
-  const { featured: boostedClasses, loading: boostedLoading } = useFeaturedTuition(SEARCH_BOOST_SLOT_COUNT, {
+  const { featured: boostedClasses, loading: boostedLoading } = useFeaturedTuition(SEARCH_BOOST_MAX_CARDS, {
     slot: SEARCH_BOOST_SLOT,
   });
-  const boostedPlaceholderCount = boostedLoading ? 0 : Math.max(0, SEARCH_BOOST_SLOT_COUNT - boostedClasses.length);
 
   const prevAppliedRef = useRef(activeFilters);
   useEffect(() => {
@@ -426,35 +400,11 @@ export function ClassSearchResults({
         </p>
       )}
 
-      {!loading && searchTopBannerPromotion && (
-        <div className="class-search-results__promo-banner">
-          <p className="class-search-results__promo-banner-label">Boosted</p>
-          <PromotionBanner promotion={searchTopBannerPromotion} size="compact" />
-        </div>
-      )}
+      <SearchBoostSection items={boostedClasses} loading={boostedLoading} />
 
-      <div className="class-search-results__body">
-        <div className="class-search-results__main">
-          <div className="class-search-results__boosted">
-            <FeaturedTuitionCarousel
-              items={boostedClasses}
-              loading={boostedLoading}
-              placeholderCount={boostedPlaceholderCount}
-              compact
-              renderItem={(card) => <SearchPromoCard card={card} />}
-              renderPlaceholder={() => <SearchPromoPlaceholderCard />}
-            />
-          </div>
+      <ClassGrid ads={ads} detailsById={detailsById} loading={loading} error={error} emptyTitle={emptyTitle} emptyMessage={emptyMessage} />
 
-          <ClassGrid ads={ads} detailsById={detailsById} loading={loading} error={error} emptyTitle={emptyTitle} emptyMessage={emptyMessage} />
-
-          <Pagination page={page} totalPages={totalPages} onPageChange={changePage} />
-        </div>
-
-        {!loading && (
-          <PromotionSidebar top={searchSidebarTopPromotion} middle={searchSidebarMiddlePromotion} bottom={searchSidebarBottomPromotion} />
-        )}
-      </div>
+      <Pagination page={page} totalPages={totalPages} onPageChange={changePage} />
 
       <FiltersDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} footer={footer}>
         <SubjectFilters

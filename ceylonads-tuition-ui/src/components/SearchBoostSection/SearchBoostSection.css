@@ -1,0 +1,42 @@
+.search-boost-section {
+  margin-bottom: 20px;
+}
+
+.search-boost-section__label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-subtle);
+  margin-bottom: 6px;
+}
+
+/* Compact, non-carousel row - up to 3 real boosted listings side by side. Card count is capped at
+   fetch time (see ClassSearchResults' SEARCH_BOOST_MAX_CARDS), so hiding extra columns here only
+   ever trims cards, never leaves a gap where a purchased slot should be. */
+.search-boost-section__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .search-boost-section__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .search-boost-section__grid > :nth-child(n + 3) {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .search-boost-section__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .search-boost-section__grid > :nth-child(n + 2) {
+    display: none;
+  }
+}

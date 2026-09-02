@@ -17,9 +17,9 @@ interface ClassGridProps {
   detailsById?: Map<number, TuitionDetails>;
 }
 
-// Organic tuition results only - sponsored content lives in the dedicated PromotionSidebar/top
-// banner next to this grid (see ClassSearchResults), never mixed into these cards, so the result
-// count and pagination the page shows always reflect real backend search results.
+// Organic tuition results only - sponsored content lives in the dedicated SearchBoostSection above
+// this grid (see ClassSearchResults), never mixed into these cards, so the result count and
+// pagination the page shows always reflect real backend search results.
 export function ClassGrid({
   ads,
   loading = false,
