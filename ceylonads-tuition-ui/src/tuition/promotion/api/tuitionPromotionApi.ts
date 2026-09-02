@@ -45,13 +45,17 @@ function firstOrUndefined(list: TuitionPromotionResponse[]): TuitionPromotion | 
 
 // Adapts a real TuitionFeaturedCardResponse (GET /api/tuition/featured?slot=...) into the same
 // TuitionPromotion shape PromotionSideCard already renders, so the Homepage Spotlight
-// (TUITION_HOME_LATEST_RIGHT) and Detail Right (TUITION_DETAIL_RIGHT) placements - real, single-
-// card backend slots, unlike the multi-card carousels Home Featured/Search Top/Detail Top use -
-// can reuse that presentation without a parallel card component. `placementType` is carried
-// through for completeness only; no renderer reads it (see model/promotion.ts).
+// (TUITION_HOME_LATEST_RIGHT), Detail Right (TUITION_DETAIL_RIGHT), and Search Page Spotlight
+// (TUITION_SEARCH_SIDEBAR_TOP) placements - real, single-card backend slots, unlike the multi-card
+// carousels Home Featured/Search Top/Detail Top use - can reuse that presentation without a
+// parallel card component. `placementType` is carried through for completeness only; no renderer
+// reads it (see model/promotion.ts). `label` defaults to "FEATURED" (Homepage/Detail Spotlight);
+// Search Page Spotlight passes "PROMOTED" instead, to read consistently with the rest of the
+// search page's paid inventory.
 export function featuredCardToPromotion(
   card: TuitionFeaturedCardResponse,
-  placementType: Extract<TuitionPromotionPlacement, "TUITION_HOME_LATEST_RIGHT" | "TUITION_DETAIL_RIGHT">,
+  placementType: Extract<TuitionPromotionPlacement, "TUITION_HOME_LATEST_RIGHT" | "TUITION_DETAIL_RIGHT" | "TUITION_SEARCH_SIDEBAR_TOP">,
+  label: PromotionLabel = "FEATURED",
 ): TuitionPromotion {
   const subtitle = [card.subject, card.level, card.primaryLocation?.name]
     .filter((value): value is string => Boolean(value))
@@ -59,7 +63,7 @@ export function featuredCardToPromotion(
   return {
     id: String(card.id),
     placementType,
-    label: "FEATURED",
+    label,
     title: card.title,
     subtitle: subtitle || undefined,
     imageUrl: card.primaryImageUrl ?? undefined,

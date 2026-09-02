@@ -1073,6 +1073,7 @@ public class SampleDataSeeder {
         activateSampleAdPromotion(adsByTitle.get("A/L Combined Mathematics - Theory & Revision"), "TUITION_HOME_FEATURED_30D");
         activateSampleAdPromotion(adsByTitle.get("Spoken English Classes - Beginner to Advanced"), "TUITION_HOME_FEATURED_30D");
         activateSampleAdPromotion(adsByTitle.get("O/L Mathematics - English Medium Group Classes"), "TUITION_SEARCH_TOP_30D");
+        activateSampleAdPromotion(adsByTitle.get("A/L Physics - One-on-One Online Classes"), "TUITION_SEARCH_SIDEBAR_TOP_30D");
 
         promotionPlans.findByCode("HOME_BANNER_7D").ifPresent(plan -> {
             addSampleBannerPromotion(bannerAdvertiser, plan, "banner-promote-business.svg");

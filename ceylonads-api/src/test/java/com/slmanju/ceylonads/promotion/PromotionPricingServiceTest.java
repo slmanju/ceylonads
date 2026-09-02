@@ -70,11 +70,14 @@ class PromotionPricingServiceTest {
     // --- base pricing (no campaign) -------------------------------------------------------------
 
     @Test
-    void noCampaignResolvesToBasePriceForAllSixTuitionProducts() {
+    void noCampaignResolvesToBasePriceForAllSevenTuitionProducts() {
         PromotionPricingService service = serviceReturning();
 
         assertBasePrice(service, tuitionPlan("TUITION_SEARCH_TOP_30D", "3490.00"), "3490.00");
         assertBasePrice(service, tuitionPlan("TUITION_SEARCH_BOOST_30D", "2990.00"), "2990.00");
+        // Search Page Spotlight (restored by V22, TUITION_SEARCH_SIDEBAR_TOP_30D) - below Search
+        // Boost, equal to Homepage Featured, per the seven-product catalog.
+        assertBasePrice(service, tuitionPlan("TUITION_SEARCH_SIDEBAR_TOP_30D", "2490.00"), "2490.00");
         assertBasePrice(service, tuitionPlan("TUITION_HOME_FEATURED_30D", "2490.00"), "2490.00");
         assertBasePrice(service, tuitionPlan("TUITION_DETAIL_TOP_30D", "1990.00"), "1990.00");
         assertBasePrice(service, tuitionPlan("TUITION_HOME_LATEST_RIGHT_30D", "1490.00"), "1490.00");

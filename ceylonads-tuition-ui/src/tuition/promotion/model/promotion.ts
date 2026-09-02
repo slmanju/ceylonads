@@ -6,9 +6,12 @@
 
 import type { Curriculum, DeliveryMode, TeacherProfileType, TuitionLevel } from "../../model/tuition";
 
-// TUITION_HOME_LATEST_RIGHT and TUITION_DETAIL_RIGHT are real ceylonads-api promotion_slots codes
-// (see featuredCardToPromotion in tuitionPromotionApi.ts) - every other value here is mock-only,
-// with no backend counterpart.
+// TUITION_HOME_LATEST_RIGHT, TUITION_DETAIL_RIGHT, and TUITION_SEARCH_SIDEBAR_TOP (the "Search
+// Page Spotlight" product - see tuitionPromotionApi.ts and ceylonads-api's V22 migration) are real
+// ceylonads-api promotion_slots codes (see featuredCardToPromotion below) - every other value here
+// is mock-only, with no backend counterpart. TUITION_SEARCH_SIDEBAR_MIDDLE/BOTTOM are the same
+// real slot family but stay retired/unused in this catalog (only one fixed right-side search
+// position exists), so they're kept here only for type completeness, never fetched.
 export type TuitionPromotionPlacement =
   | "TUITION_HOME_TOP_BANNER"
   | "TUITION_HOME_FEATURED"
@@ -24,7 +27,10 @@ export type TuitionPromotionPlacement =
   | "TUITION_HOME_LATEST_RIGHT"
   | "TUITION_DETAIL_RIGHT";
 
-export type PromotionLabel = "SPONSORED" | "FEATURED";
+// PROMOTED is used for search-results-page placements (Search Page Spotlight) to read consistently
+// with the rest of the search page's paid inventory (see SearchPromoCard/SearchBoostSection),
+// rather than FEATURED's homepage/detail-page wording.
+export type PromotionLabel = "SPONSORED" | "FEATURED" | "PROMOTED";
 
 export type PromotionTargetType = "AD" | "TEACHER_PROFILE" | "INSTITUTE_PROFILE" | "EXTERNAL";
 

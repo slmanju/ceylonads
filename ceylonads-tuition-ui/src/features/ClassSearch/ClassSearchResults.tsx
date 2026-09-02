@@ -15,6 +15,8 @@ import type { AdResponse, SortOption } from "../../types/api";
 import { tuitionRepository, searchTuitionClasses } from "../../tuition/api/tuitionApi";
 import { useFeaturedTuition } from "../../hooks/useFeaturedTuition";
 import { SearchBoostSection } from "../../components/SearchBoostSection/SearchBoostSection";
+import { featuredCardToPromotion } from "../../tuition/promotion/api/tuitionPromotionApi";
+import { PromotionHomeRail } from "../../components/Promotion/PromotionHomeRail";
 import { emptyClassFilterValues, type ClassFilterValues } from "../../tuition/model/searchFilters";
 import { matchesTuitionCriteria, type TuitionDetails, type TuitionSearchCriteria } from "../../tuition/model/tuition";
 import { getApiErrorMessage } from "../../utils/apiError";
@@ -36,6 +38,21 @@ const PAGE_SIZE = 9;
 // never backfilled with placeholder cards, and hidden entirely when nothing is active.
 const SEARCH_BOOST_SLOT = "TUITION_SEARCH_BOOST";
 const SEARCH_BOOST_MAX_CARDS = 3;
+
+// Search Page Spotlight - the search page's fixed right-rail placement, a real,
+// independently-purchasable slot (capacity 1) reusing the stable TUITION_SEARCH_SIDEBAR_TOP code
+// from before the six-product catalog cleanup, restored under its current name/price by
+// ceylonads-api's V22 migration. Same useFeaturedTuition(1, {slot}) + featuredCardToPromotion +
+// PromotionHomeRail (PromotionSideCard / PromotionSelfAd "Advertise Here" fallback) pattern as
+// Homepage Spotlight (TUITION_HOME_LATEST_RIGHT) and Detail Spotlight (TUITION_DETAIL_RIGHT) -
+// never mixed with Search Top or Search Boost, which read entirely different slots and render via
+// entirely different components (FeaturedTuitionCarousel / SearchBoostSection).
+const SEARCH_SPOTLIGHT_SLOT = "TUITION_SEARCH_SIDEBAR_TOP";
+// Where the mobile/tablet inline card lands among the organic cards - after the first row's worth
+// (see ClassGrid's insertAfter). Desktop shows the same promotion in the right rail instead (see
+// the >=1080px breakpoint in ClassSearchResults.css) - the two are mutually exclusive per
+// breakpoint, never both visible at once.
+const SEARCH_SPOTLIGHT_INLINE_INSERT_INDEX = 3;
 
 // classFormat/classPurpose remain a decorative, mock-provider-only layer applied client-side to
 // the already-fetched results page (see tuition/model/tuition.ts) - the backend has no such
@@ -136,6 +153,11 @@ export function ClassSearchResults({
   const { featured: boostedClasses, loading: boostedLoading } = useFeaturedTuition(SEARCH_BOOST_MAX_CARDS, {
     slot: SEARCH_BOOST_SLOT,
   });
+
+  const { featured: spotlightFeatured } = useFeaturedTuition(1, { slot: SEARCH_SPOTLIGHT_SLOT });
+  const spotlightPromotion = spotlightFeatured[0]
+    ? featuredCardToPromotion(spotlightFeatured[0], "TUITION_SEARCH_SIDEBAR_TOP", "PROMOTED")
+    : undefined;
 
   const prevAppliedRef = useRef(activeFilters);
   useEffect(() => {
@@ -400,11 +422,30 @@ export function ClassSearchResults({
         </p>
       )}
 
-      <SearchBoostSection items={boostedClasses} loading={boostedLoading} />
+      <div className="class-search-results__body">
+        <div className="class-search-results__main">
+          <SearchBoostSection items={boostedClasses} loading={boostedLoading} />
 
-      <ClassGrid ads={ads} detailsById={detailsById} loading={loading} error={error} emptyTitle={emptyTitle} emptyMessage={emptyMessage} />
+          <ClassGrid
+            ads={ads}
+            detailsById={detailsById}
+            loading={loading}
+            error={error}
+            emptyTitle={emptyTitle}
+            emptyMessage={emptyMessage}
+            insertAfter={{
+              index: SEARCH_SPOTLIGHT_INLINE_INSERT_INDEX,
+              node: <PromotionHomeRail promotion={spotlightPromotion} />,
+            }}
+          />
 
-      <Pagination page={page} totalPages={totalPages} onPageChange={changePage} />
+          <Pagination page={page} totalPages={totalPages} onPageChange={changePage} />
+        </div>
+
+        <div className="class-search-results__spotlight-rail">
+          <PromotionHomeRail promotion={spotlightPromotion} />
+        </div>
+      </div>
 
       <FiltersDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} footer={footer}>
         <SubjectFilters

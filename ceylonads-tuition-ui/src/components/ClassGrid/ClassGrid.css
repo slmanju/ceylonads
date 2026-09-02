@@ -8,10 +8,24 @@
 }
 
 /* Caps at 3 columns (3x3 = 9 per page, matching the backend page size) at every width from here
-   up, including next to the promotions sidebar (see ClassSearchResults.css's matching breakpoint)
-   - never 4, so portrait poster cards keep enough width to stay readable. */
+   up, including next to the Search Page Spotlight rail (see ClassSearchResults.css's matching
+   breakpoint) - never 4, so portrait poster cards keep enough width to stay readable. */
 @media (min-width: 640px) {
   .class-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Search Page Spotlight's mobile/tablet inline card (see ClassGrid's insertAfter prop) - spans
+   every column of this same grid. Hidden by default: below 1080px the desktop rail (see
+   ClassSearchResults.css) is hidden instead, so exactly one of the two ever shows. */
+.class-grid__insert {
+  display: none;
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1079px) {
+  .class-grid__insert {
+    display: block;
   }
 }

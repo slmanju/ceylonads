@@ -52,9 +52,11 @@ export function SponsoredBadge() {
   );
 }
 
-/** Renders the FeaturedBadge or SponsoredBadge for a mock tuition promotion (see tuition/promotion). */
-export function PromotionLabelBadge({ label }: { label: "SPONSORED" | "FEATURED" }) {
-  return label === "FEATURED" ? <FeaturedBadge /> : <SponsoredBadge />;
+/** Renders the FeaturedBadge, SponsoredBadge, or PromotedBadge for a tuition promotion (see tuition/promotion). */
+export function PromotionLabelBadge({ label }: { label: "SPONSORED" | "FEATURED" | "PROMOTED" }) {
+  if (label === "FEATURED") return <FeaturedBadge />;
+  if (label === "PROMOTED") return <PromotedBadge />;
+  return <SponsoredBadge />;
 }
 
 export function TeacherProfileBadge({ profileType }: { profileType: "TEACHER" | "INSTITUTE" }) {
