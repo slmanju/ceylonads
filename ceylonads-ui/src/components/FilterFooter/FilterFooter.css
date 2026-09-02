@@ -1,0 +1,12 @@
+.filter-footer {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-footer__reset {
+  flex: 0 0 auto;
+}
+
+.filter-footer__apply {
+  flex: 1 1 auto;
+}

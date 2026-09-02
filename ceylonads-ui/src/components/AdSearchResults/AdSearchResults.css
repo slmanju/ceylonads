@@ -1,0 +1,110 @@
+.ad-search-results {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.ad-search-results__main {
+  min-width: 0;
+}
+
+.ad-search-results__sidebar {
+  position: sticky;
+  top: 84px;
+  max-height: calc(100vh - 104px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.ad-search-results__sidebar-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.ad-search-results__sidebar-footer {
+  position: sticky;
+  bottom: -20px;
+  margin: 8px -20px -20px;
+  padding: 12px 20px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
+.ad-search-results__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ad-search-results__count {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin-bottom: 16px;
+}
+
+.ad-search-results__query {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.ad-search-results__sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.ad-search-results__sort select {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.ad-search-results__filter-btn {
+  display: none;
+  position: relative;
+}
+
+.ad-search-results__filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .ad-search-results {
+    grid-template-columns: 1fr;
+  }
+
+  .ad-search-results__sidebar {
+    display: none;
+  }
+
+  .ad-search-results__filter-btn {
+    display: inline-flex;
+  }
+}

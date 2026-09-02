@@ -1,0 +1,40 @@
+.districts-page {
+  padding: 32px 20px 56px;
+}
+
+.districts-page__title {
+  font-size: 1.6rem;
+}
+
+.districts-page__subtitle {
+  color: var(--color-text-muted);
+  margin-top: 6px;
+  margin-bottom: 24px;
+}
+
+.districts-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.districts-page__card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  color: var(--color-text-strong);
+}
+
+.districts-page__card svg {
+  color: var(--color-accent);
+}
+
+.districts-page__card:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}

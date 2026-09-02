@@ -1,0 +1,45 @@
+.account-page {
+  display: flex;
+  justify-content: center;
+  padding: 48px 20px;
+}
+
+.account-page__card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.account-page__icon {
+  font-size: 3rem;
+  color: var(--color-primary);
+  margin-bottom: 6px;
+}
+
+.account-page__name {
+  font-size: 1.2rem;
+}
+
+.account-page__role {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-subtle);
+  font-weight: 700;
+}
+
+.account-page__links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-top: 22px;
+}

@@ -1,0 +1,269 @@
+.promote-ad-page {
+  padding: 24px 20px 56px;
+  max-width: 900px;
+}
+
+.promote-ad-page__title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin-bottom: 20px;
+}
+
+.promote-ad-page__back {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.promote-ad-page__ad-summary {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 28px;
+}
+
+.promote-ad-page__ad-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.promote-ad-page__ad-price {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  margin-top: 2px;
+}
+
+.promote-ad-page__ad-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.promote-ad-page__section-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 14px;
+}
+
+.promote-ad-page__plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.promotion-plan-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  gap: 6px;
+}
+
+.promotion-plan-card__placement {
+  align-self: flex-start;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  margin-bottom: 4px;
+}
+
+.promotion-plan-card__name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.promotion-plan-card__description {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  flex-grow: 1;
+}
+
+.promotion-plan-card__duration {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.promotion-plan-card__price {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  margin-top: 2px;
+}
+
+.promotion-plan-card__availability {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.promotion-plan-card__select {
+  margin-top: 12px;
+  width: 100%;
+}
+
+.promotion-plan-card__select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.promote-ad-page__ad-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  max-width: 560px;
+}
+
+.promote-ad-page__ad-select {
+  flex: 1;
+  min-width: 220px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.promote-ad-page__confirm {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  max-width: 520px;
+}
+
+.promote-ad-page__payment-instructions {
+  border-top: 1px solid var(--color-border);
+  margin-top: 20px;
+  padding-top: 16px;
+}
+
+.promote-ad-page__hint {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin: 8px 0 12px;
+}
+
+.promote-ad-page__field-label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.promote-ad-page__proof {
+  margin-top: 16px;
+}
+
+.promote-ad-page__proof-selected {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.promote-ad-page__error {
+  background: #fef2f2;
+  color: var(--color-danger);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.promote-ad-page__confirm-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.promote-ad-page__confirm-details > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 8px;
+}
+
+.promote-ad-page__confirm-details dt {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.promote-ad-page__confirm-details dd {
+  font-size: 0.95rem;
+  color: var(--color-text);
+  font-weight: 700;
+  text-align: right;
+}
+
+.promote-ad-page__confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.promote-ad-page__success {
+  max-width: 520px;
+  margin: 40px auto;
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 40px 28px;
+}
+
+.promote-ad-page__success-icon {
+  font-size: 2.4rem;
+  color: var(--color-success);
+  margin-bottom: 12px;
+}
+
+.promote-ad-page__success h1 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin-bottom: 10px;
+}
+
+.promote-ad-page__success p {
+  font-size: 0.92rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.promote-ad-page__success-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}

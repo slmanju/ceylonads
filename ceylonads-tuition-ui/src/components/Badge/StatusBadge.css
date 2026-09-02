@@ -1,0 +1,27 @@
+.status-badge {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: var(--color-neutral-soft);
+  color: var(--color-text-muted);
+}
+
+.status-badge--active {
+  background: #e5f4ea;
+  color: var(--color-success);
+}
+
+.status-badge--pending_review {
+  background: var(--color-accent-light);
+  color: var(--color-accent-dark);
+}
+
+.status-badge--rejected,
+.status-badge--deactivated {
+  background: #fdecea;
+  color: var(--color-danger);
+}

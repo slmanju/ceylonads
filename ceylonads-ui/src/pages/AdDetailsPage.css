@@ -1,0 +1,243 @@
+.ad-details-page {
+  padding: 24px 20px 56px;
+}
+
+.ad-details-page__header {
+  margin-bottom: 16px;
+}
+
+.ad-details-page__title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.ad-details-page__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.ad-details-page__meta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ad-details-page__price--mobile {
+  display: none;
+}
+
+.ad-details-page__layout {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+/* Tuition ads use portrait poster artwork, so the gallery column stays narrower and taller
+   instead of stretching a portrait image across the wide landscape column width. */
+.ad-details-page__layout--portrait {
+  grid-template-columns: minmax(320px, 640px) 1fr;
+}
+
+.ad-details-page__side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 84px;
+}
+
+.ad-details-page__contact-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+}
+
+.ad-details-page__price {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.ad-details-page__seller {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 4px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ad-details-page__seller-icon {
+  font-size: 2.4rem;
+  color: var(--color-text-subtle);
+  flex-shrink: 0;
+}
+
+.ad-details-page__seller-label {
+  font-size: 0.78rem;
+  color: var(--color-text-subtle);
+}
+
+.ad-details-page__seller-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.ad-details-page__contact {
+  display: flex;
+  gap: 10px;
+}
+
+.ad-details-page__contact .btn {
+  flex: 1;
+}
+
+.ad-details-page__whatsapp {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.ad-details-page__whatsapp:hover {
+  background: #f0fdf4;
+}
+
+.ad-details-page__contact--mobile {
+  display: none;
+}
+
+.ad-details-page__seller-block--mobile {
+  display: none;
+}
+
+.ad-details-page__sidebar-promo--mobile {
+  display: none;
+}
+
+.ad-details-page__content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+}
+
+.ad-details-page__details {
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ad-details-page__details h2,
+.ad-details-page__description h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.ad-details-page__details dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 24px;
+  margin: 0;
+}
+
+.ad-details-page__details dt {
+  font-size: 0.78rem;
+  color: var(--color-text-subtle);
+}
+
+.ad-details-page__details dd {
+  margin: 2px 0 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+@media (max-width: 860px) {
+  .ad-details-page__layout {
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-bottom: 0;
+  }
+
+  .ad-details-page__side {
+    position: static;
+  }
+
+  .ad-details-page__contact-card {
+    display: none;
+  }
+
+  .ad-details-page__price--mobile {
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .ad-details-page__contact--mobile {
+    display: flex;
+    gap: 10px;
+    margin: 16px 0 24px;
+  }
+
+  .ad-details-page__seller-block--mobile {
+    display: block;
+    margin-bottom: 24px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+  }
+
+  .ad-details-page__seller-block--mobile h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .ad-details-page__seller-block--mobile .ad-details-page__seller {
+    padding: 0;
+    border-bottom: none;
+  }
+
+  .ad-details-page__seller-block--mobile .ad-details-page__seller-label {
+    display: none;
+  }
+
+  .ad-details-page__details dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ad-details-page__sidebar-promo--desktop {
+    display: none;
+  }
+
+  .ad-details-page__sidebar-promo--mobile {
+    display: flex;
+  }
+}
+
+@media (max-width: 480px) {
+  .ad-details-page__details dl {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 340px) {
+  .ad-details-page__contact--mobile {
+    flex-direction: column;
+  }
+}

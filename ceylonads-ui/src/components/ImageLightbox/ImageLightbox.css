@@ -1,0 +1,119 @@
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  background: rgba(17, 24, 39, 0.94);
+}
+
+.image-lightbox__toolbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  color: #fff;
+}
+
+.image-lightbox__counter {
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.image-lightbox__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.image-lightbox__actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.image-lightbox__actions button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.image-lightbox__actions button:disabled {
+  color: rgba(255, 255, 255, 0.35);
+  cursor: not-allowed;
+}
+
+.image-lightbox__stage {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.image-lightbox__image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.image-lightbox__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.image-lightbox__nav:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.image-lightbox__nav--prev {
+  left: 12px;
+}
+
+.image-lightbox__nav--next {
+  right: 12px;
+}
+
+@media (max-width: 640px) {
+  .image-lightbox__toolbar {
+    padding: 8px 10px;
+  }
+
+  .image-lightbox__actions button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .image-lightbox__nav {
+    width: 40px;
+    height: 40px;
+  }
+}

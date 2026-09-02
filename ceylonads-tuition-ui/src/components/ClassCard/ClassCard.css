@@ -1,0 +1,170 @@
+/* height: 100% + flex-column so every card fills its grid cell's stretched height equally
+   (see ClassGrid.css's default align-items: stretch) regardless of title/chip/poster-ratio
+   differences between listings. */
+.class-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.class-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.class-card__link {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Same fixed portrait media frame for every card, regardless of the source poster's actual
+   ratio, so every card's media area (and therefore total card height) matches its neighbours.
+   object-fit: contain (never cover) means the full poster is always visible inside that frame -
+   a 9:16 source gets side whitespace, a landscape source gets top/bottom whitespace, but nothing
+   is ever cropped. */
+.class-card__image-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--color-surface-soft);
+}
+
+.class-card__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.class-card__image--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--color-text-subtle);
+}
+
+.class-card__badges {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 6px;
+}
+
+.class-card__body {
+  flex: 1;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.class-card__subject {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-primary-dark);
+}
+
+/* Strictly one line - a long title truncates rather than growing the card. The full title is
+   still on the <p> via the title="" attribute (hover tooltip) and, of course, the detail page. */
+.class-card__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-strong);
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Strictly one row of chips: no wrap, so a listing with several attributes can't grow its card
+   taller than its neighbours. Each chip keeps its natural width (flex: 0 0 auto) except the last,
+   which is allowed to shrink and truncate (min-width: 0 + ellipsis) if the row runs out of room -
+   this naturally prioritises the earlier (more important) chips per the render order, without
+   needing to drop any chip from the DOM. */
+.class-card__tags {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.class-card__tag {
+  flex: 0 0 auto;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-neutral-soft);
+  border-radius: var(--radius-pill);
+  padding: 2px 9px;
+}
+
+.class-card__tag:last-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.class-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+/* Icon stays a fixed size; only the text (in its own span) truncates - see class-card__meta-text. */
+.class-card__meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.class-card__meta-item svg {
+  flex-shrink: 0;
+}
+
+.class-card__meta-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.class-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+}
+
+.class-card__price {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--color-accent-dark);
+  font-size: 0.92rem;
+}
+
+.class-card__date {
+  font-size: 0.75rem;
+  color: var(--color-text-subtle);
+}

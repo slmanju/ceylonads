@@ -1,0 +1,96 @@
+.my-ad-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.my-ad-card__image-wrap {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background: var(--color-bg);
+}
+
+.my-ad-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+@media (max-width: 640px) {
+  .my-ad-card__image-wrap {
+    height: 160px;
+  }
+}
+
+.my-ad-card__image--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-subtle);
+  font-size: 2rem;
+}
+
+.my-ad-card__status {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+.my-ad-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+}
+
+.my-ad-card__price {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.my-ad-card__title {
+  font-size: 0.9rem;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  min-height: 2.4em;
+}
+
+.my-ad-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: var(--color-text-subtle);
+}
+
+.my-ad-card__location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-ad-card__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.my-ad-card__action {
+  flex: 1;
+  padding: 7px 10px;
+  font-size: 0.8rem;
+}

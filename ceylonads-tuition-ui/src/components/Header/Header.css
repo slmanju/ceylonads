@@ -1,0 +1,128 @@
+.tuition-header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.tuition-header__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  gap: 16px;
+}
+
+.tuition-header__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-text-strong);
+  white-space: nowrap;
+}
+
+.tuition-header__logo svg {
+  color: var(--color-accent);
+  font-size: 1.3rem;
+}
+
+.tuition-header__logo-accent {
+  color: var(--color-accent);
+}
+
+.tuition-header__nav {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.tuition-header__link {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.tuition-header__link.active,
+.tuition-header__link:hover {
+  color: var(--color-primary);
+}
+
+.tuition-header__account {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tuition-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.tuition-header__logout {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.tuition-header__post-btn {
+  padding: 8px 16px;
+  font-size: 0.88rem;
+}
+
+.tuition-header__menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: var(--color-text-strong);
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .tuition-header__menu-toggle {
+    display: block;
+  }
+
+  .tuition-header__nav {
+    display: none;
+    position: absolute;
+    top: 52px;
+    left: 0;
+    right: 0;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 8px 0;
+    box-shadow: var(--shadow-md);
+  }
+
+  .tuition-header__nav--open {
+    display: flex;
+  }
+
+  .tuition-header__nav .tuition-header__link {
+    padding: 12px 20px;
+  }
+
+  .tuition-header__actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .tuition-header__post-btn {
+    margin: 12px 20px 4px;
+  }
+}

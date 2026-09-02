@@ -1,0 +1,73 @@
+.tuition-footer {
+  background: var(--color-primary-dark);
+  color: #c7d2de;
+  margin-top: 48px;
+}
+
+.tuition-footer__grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 28px;
+  padding: 44px 20px 28px;
+}
+
+.tuition-footer__logo {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.tuition-footer__logo span {
+  color: var(--color-accent);
+}
+
+.tuition-footer__tagline {
+  margin-top: 10px;
+  font-size: 0.88rem;
+  color: #aebbcb;
+  max-width: 32ch;
+}
+
+.tuition-footer__col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tuition-footer__heading {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #7e8fa3;
+  margin-bottom: 2px;
+}
+
+.tuition-footer__col a,
+.tuition-footer__static {
+  font-size: 0.88rem;
+  color: #c7d2de;
+}
+
+.tuition-footer__col a:hover {
+  color: #fff;
+}
+
+.tuition-footer__bottom {
+  border-top: 1px solid #24435e;
+  padding: 16px 20px;
+  font-size: 0.8rem;
+  color: #7e8fa3;
+}
+
+@media (max-width: 760px) {
+  .tuition-footer__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .tuition-footer__grid {
+    grid-template-columns: 1fr;
+  }
+}

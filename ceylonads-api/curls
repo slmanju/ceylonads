@@ -1,0 +1,13 @@
+1. Create schema
+2. Run master-data SQL
+3. Start Spring Boot with:
+   ceylonads.seed.enabled=true
+
+4. POST /api/dev/seed/people
+5. POST /api/dev/seed/cars
+6. POST /api/dev/seed/motorcycles
+7. POST /api/dev/seed/property
+8. POST /api/dev/seed/mobiles
+9. POST /api/dev/seed/tuition
+10. POST /api/dev/seed/services
+11. POST /api/dev/seed/promotions

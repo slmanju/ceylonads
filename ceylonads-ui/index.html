@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Everything between seo:start/seo:end is a fallback for the instant before React mounts and
+      for any crawler/link-preview bot that never runs JavaScript (many OG scrapers don't). For
+      "/" and generic routes it's rendered as-is; for "/ads/{slug}" SpaController (backend) replaces
+      this whole block with ad-specific tags before sending the response, so the markers must
+      survive the frontend build unchanged - do not reformat/remove them. Seo.tsx then overwrites
+      all of them again with page-specific values once the route renders client-side.
+    -->
+    <!--seo:start-->
+    <title>CeylonAds — Sri Lanka's Trusted Marketplace</title>
+    <meta name="description" content="Sri Lanka's trusted marketplace to buy and sell vehicles, property, mobiles, tuition and services." />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:site_name" content="CeylonAds" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="CeylonAds — Sri Lanka's Trusted Marketplace" />
+    <meta property="og:description" content="Sri Lanka's trusted marketplace to buy and sell vehicles, property, mobiles, tuition and services." />
+    <meta property="og:image" content="/og/og-default.png" />
+    <meta property="og:url" content="#" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="CeylonAds — Sri Lanka's Trusted Marketplace" />
+    <meta name="twitter:description" content="Sri Lanka's trusted marketplace to buy and sell vehicles, property, mobiles, tuition and services." />
+    <meta name="twitter:image" content="/og/og-default.png" />
+    <link rel="canonical" href="#" />
+    <!--seo:end-->
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

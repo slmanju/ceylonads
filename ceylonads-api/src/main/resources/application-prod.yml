@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ceylonads}}
+    username: ${DB_USERNAME:ceylonads}
+    password: ${DB_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+springdoc:
+  swagger-ui:
+    enabled: true
+
+ceylonads:
+  cors:
+    # Comma-separated list of allowed browser origins, e.g. https://ceylonads.web.lk
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://ceylonads.web.lk}
+  jwt:
+    # No fallback: production must set a real, securely generated secret.
+    secret-base64: ${JWT_SECRET_BASE64}
+  media:
+    s3:
+      bucket: ${S3_BUCKET:ceylonads-media}
+      public-base-url: ${S3_PUBLIC_BASE_URL:https://ceylonads-media.s3.ap-south-1.amazonaws.com}
+      region: ${AWS_REGION:ap-south-1}

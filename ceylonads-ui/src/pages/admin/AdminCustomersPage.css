@@ -1,0 +1,34 @@
+.admin-customers-page__tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.admin-customers-page__tab {
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-customers-page__tab:hover {
+  color: var(--color-text);
+}
+
+.admin-customers-page__tab--active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.admin-customers-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

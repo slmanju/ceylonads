@@ -1,0 +1,107 @@
+.subject-combobox {
+  position: relative;
+}
+
+.subject-combobox__control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.subject-combobox__control input {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  padding: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-strong);
+  background: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subject-combobox__control input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.subject-combobox__control input::placeholder {
+  color: var(--color-text-subtle);
+  font-weight: 500;
+}
+
+.subject-combobox__control input:disabled {
+  cursor: wait;
+}
+
+.subject-combobox__chevron {
+  flex-shrink: 0;
+  color: var(--color-text-subtle);
+  font-size: 0.8rem;
+}
+
+.subject-combobox__clear {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--color-text-subtle);
+  cursor: pointer;
+  padding: 2px;
+}
+
+.subject-combobox__clear:hover {
+  color: var(--color-primary);
+}
+
+.subject-combobox__listbox {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 40;
+  width: max(100%, 240px);
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 6px;
+}
+
+.subject-combobox__option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 10px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.subject-combobox__option--any {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.subject-combobox__option--highlighted {
+  background: var(--color-primary-light);
+}
+
+.subject-combobox__option--selected {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.subject-combobox__empty {
+  padding: 9px 10px;
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}

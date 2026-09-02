@@ -1,0 +1,87 @@
+.post-ad-stepper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 28px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.post-ad-stepper__item {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.post-ad-stepper__button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.post-ad-stepper__button:disabled {
+  cursor: not-allowed;
+}
+
+.post-ad-stepper__dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  color: var(--color-text-subtle);
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: var(--color-surface);
+}
+
+.post-ad-stepper__button--current .post-ad-stepper__dot {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.post-ad-stepper__button--done .post-ad-stepper__dot {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.post-ad-stepper__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-subtle);
+  white-space: nowrap;
+}
+
+.post-ad-stepper__button--current .post-ad-stepper__label {
+  color: var(--color-text);
+}
+
+.post-ad-stepper__connector {
+  height: 2px;
+  flex: 1;
+  min-width: 16px;
+  background: var(--color-border);
+  margin: 0 6px;
+  margin-bottom: 22px;
+}
+
+@media (max-width: 640px) {
+  .post-ad-stepper__label {
+    display: none;
+  }
+
+  .post-ad-stepper__connector {
+    min-width: 10px;
+  }
+}

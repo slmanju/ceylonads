@@ -1,0 +1,20 @@
+.promotion-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.promotion-sidebar__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-subtle);
+}
+
+@media (min-width: 1080px) {
+  .promotion-sidebar {
+    position: sticky;
+    top: 148px;
+  }
+}

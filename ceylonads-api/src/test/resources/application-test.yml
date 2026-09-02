@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:ceylonads-test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+    properties:
+      hibernate:
+        generate_statistics: true
+
+ceylonads:
+  media:
+    root: ./build/test-data/media
+    public-prefix: /media
+  jwt:
+    # Test-only signing secret; never used outside the test profile.
+    secret-base64: Y2V5bG9uYWRzLXRlc3Qtb25seS1zZWNyZXQta2V5LTMyLWJ5dGVzLWxvbmc=

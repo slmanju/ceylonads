@@ -1,0 +1,74 @@
+.class-schedule h2 {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+}
+
+.class-schedule__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.class-schedule__item {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.class-schedule__location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--color-text-strong);
+}
+
+.class-schedule__location svg {
+  color: var(--color-primary);
+}
+
+.class-schedule__time {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+
+.class-schedule__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.class-schedule__tag {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-surface-soft);
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+}
+
+.class-schedule__tag--mode {
+  color: var(--color-primary-dark);
+  background: var(--color-primary-light);
+}
+
+.class-schedule__extra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.class-schedule__extra svg {
+  color: var(--color-text-subtle);
+}

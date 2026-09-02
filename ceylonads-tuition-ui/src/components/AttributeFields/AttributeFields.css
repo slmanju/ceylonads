@@ -1,0 +1,42 @@
+.attribute-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.attribute-field__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-strong);
+}
+
+.attribute-field__required {
+  color: var(--color-danger);
+  margin-left: 3px;
+}
+
+.attribute-field__error {
+  font-size: 0.8rem;
+  color: var(--color-danger);
+}
+
+.attribute-field__checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.attribute-field__checkbox-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.dynamic-attribute-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

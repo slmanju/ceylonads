@@ -1,0 +1,296 @@
+.class-detail-page {
+  padding: 24px 20px 56px;
+}
+
+/* Fixed top promotions - page-level advertising space above the listing's own title/identity,
+   never tied to the current listing's subject/tutor/curriculum (see ClassDetailPage.tsx). Sits
+   directly on the page's white background - no outer panel - matching the Tuition search page's
+   top carousel (ClassesPage.css) rather than a large gold/cream wrapper. */
+.class-detail-page__top-promotions {
+  margin-bottom: 28px;
+}
+
+@media (max-width: 600px) {
+  .class-detail-page__top-promotions {
+    margin-bottom: 24px;
+  }
+}
+
+.class-detail-page__header {
+  margin-bottom: 20px;
+}
+
+.class-detail-page__badges {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.class-detail-page__title {
+  font-size: 1.6rem;
+  color: var(--color-text-strong);
+}
+
+.class-detail-page__identity {
+  margin-top: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+}
+
+.class-detail-page__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 0.86rem;
+  color: var(--color-text-muted);
+}
+
+.class-detail-page__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.class-detail-page__price {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--color-accent-dark);
+}
+
+/* The main column is capped near the poster's own preferred width (rather than a generic 1fr)
+   so the poster's right edge sits close to the sidebar - closing the horizontal gap the old
+   1fr-column-with-an-internally-capped-poster layout left behind - while still letting full-width
+   content like "About This Class" use the whole column. The sidebar takes the rest of the
+   1180-1280px page, which is what lets it carry real cards (contact, details, promotion) instead
+   of one small card floating in a mostly-empty rail. */
+.class-detail-page__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 700px) minmax(300px, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.class-detail-page__gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.class-detail-page__details {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+}
+
+.class-detail-page__details h2,
+.class-detail-page__description h2 {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+}
+
+/* Compact 2-column mini-grid rather than the old wide six-column desktop box - rows pair up
+   naturally (Level/Curriculum, Medium/Format, ...) and only fields with real values ever appear.
+   Longer values (Subject, Purpose) opt into `--wide` to span both columns. */
+.class-detail-page__details dl {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px 16px;
+}
+
+.class-detail-page__details-row--wide {
+  grid-column: 1 / -1;
+}
+
+.class-detail-page__details dt {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-subtle);
+  font-weight: 700;
+}
+
+.class-detail-page__details dd {
+  margin: 3px 0 0;
+  font-weight: 600;
+  color: var(--color-text-strong);
+  font-size: 0.92rem;
+}
+
+/* Hidden on desktop - the sidebar's own copy of this card (below) is what shows there. Revealed
+   only once the layout stacks to a single column, right after the thumbnails. */
+.class-detail-page__details-mobile {
+  display: none;
+}
+
+.class-detail-page__description p {
+  color: var(--color-text);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* Normal document flow, not sticky: the rail now holds several real cards (contact, details,
+   promotion) rather than one small contact card, so pinning the whole stack while the visitor
+   scrolls through "About This Class" below would outlast the viewport and hurt scrolling. */
+.class-detail-page__side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.class-detail-page__contact-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.class-detail-page__seller {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.class-detail-page__seller-icon {
+  font-size: 1.8rem;
+  color: var(--color-primary);
+}
+
+.class-detail-page__seller-label {
+  font-size: 0.76rem;
+  color: var(--color-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.class-detail-page__seller-name {
+  font-weight: 700;
+  color: var(--color-text-strong);
+}
+
+.class-detail-page__seller-experience {
+  margin-top: 2px;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.class-detail-page__contact-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.class-detail-page__contact-buttons .btn {
+  flex: 1;
+}
+
+.class-detail-page__contact-note {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--color-text-subtle);
+}
+
+/* The sidebar is where the tall poster's height gets put to use, so its promo card should read
+   as a normal, secondary promotion slot - not stretch to match the poster or the contact/details
+   cards above it. Scoped to this page's sidebar/mobile-promo slots so the shared component's
+   sizing on the homepage rail (PromotionHomeRail) is untouched. */
+.class-detail-page__side .promotion-side-card,
+.class-detail-page__side .promotion-self-ad,
+.class-detail-page__promo-mobile .promotion-side-card,
+.class-detail-page__promo-mobile .promotion-self-ad {
+  min-height: 0;
+  padding: 18px;
+}
+
+.class-detail-page__side .promotion-side-card__image,
+.class-detail-page__promo-mobile .promotion-side-card__image {
+  height: 120px;
+}
+
+.class-detail-page__side .promotion-self-ad__title,
+.class-detail-page__promo-mobile .promotion-self-ad__title {
+  font-size: 1.1rem;
+}
+
+.class-detail-page__side .promotion-self-ad__body,
+.class-detail-page__promo-mobile .promotion-self-ad__body {
+  font-size: 0.88rem;
+}
+
+.class-detail-page__side .promotion-self-ad__cta,
+.class-detail-page__promo-mobile .promotion-self-ad__cta {
+  padding: 12px 18px;
+  font-size: 0.95rem;
+}
+
+.class-detail-page__mobile-bar {
+  display: none;
+}
+
+.class-detail-page__promo-mobile {
+  display: none;
+}
+
+/* Below this, two columns get cramped for a poster capped near 700px plus a sidebar with a
+   300px floor - so the layout stacks intentionally rather than squeezing both. */
+@media (max-width: 1024px) {
+  .class-detail-page {
+    padding-bottom: 88px;
+  }
+
+  .class-detail-page__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .class-detail-page__side {
+    display: none;
+  }
+
+  .class-detail-page__details-mobile {
+    display: block;
+  }
+
+  .class-detail-page__mobile-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    padding: 10px 12px;
+    box-shadow: var(--shadow-md);
+  }
+
+  .class-detail-page__mobile-bar-price {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--color-accent-dark);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .class-detail-page__mobile-bar .class-detail-page__contact-buttons {
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .class-detail-page__mobile-bar .class-detail-page__contact-buttons .btn {
+    padding: 9px 12px;
+    font-size: 0.86rem;
+    gap: 6px;
+  }
+
+  .class-detail-page__promo-mobile {
+    display: block;
+    margin-top: 16px;
+  }
+}

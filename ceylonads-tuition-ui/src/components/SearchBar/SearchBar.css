@@ -1,0 +1,81 @@
+.tuition-search-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 8px;
+  box-shadow: var(--shadow-md);
+  max-width: 900px;
+}
+
+.tuition-search-bar__field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border-right: 1px solid var(--color-border);
+  flex: 1;
+  min-width: 0;
+}
+
+.tuition-search-bar__field:last-of-type {
+  border-right: none;
+}
+
+.tuition-search-bar__field--query {
+  flex: 1.6;
+}
+
+.tuition-search-bar__icon {
+  color: var(--color-text-subtle);
+  flex-shrink: 0;
+}
+
+.tuition-search-bar__field .subject-combobox {
+  flex: 1;
+  min-width: 0;
+}
+
+.tuition-search-bar__field input,
+.tuition-search-bar__field select {
+  border: none;
+  padding: 10px 0;
+  width: 100%;
+  background: transparent;
+}
+
+.tuition-search-bar__field input:focus-visible,
+.tuition-search-bar__field select:focus-visible {
+  box-shadow: none;
+}
+
+.tuition-search-bar__submit {
+  flex-shrink: 0;
+  padding: 0 22px;
+}
+
+@media (max-width: 760px) {
+  .tuition-search-bar {
+    flex-direction: column;
+    padding: 16px;
+    gap: 12px;
+    box-sizing: border-box;
+  }
+
+  .tuition-search-bar__field {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    padding: 6px 4px;
+    width: 100%;
+  }
+
+  .tuition-search-bar__field:last-of-type {
+    border-bottom: none;
+  }
+
+  .tuition-search-bar__submit {
+    width: 100%;
+    height: 50px;
+  }
+}

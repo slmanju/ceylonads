@@ -1,0 +1,106 @@
+.featured-tuition-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.featured-tuition-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* Same fixed portrait media frame for every card, regardless of the source poster's actual
+   ratio, so every card's media area (and therefore total card height) matches its neighbours.
+   object-fit: contain (never cover) means the full poster is always visible inside that frame -
+   a 9:16 source gets side whitespace, a landscape source gets top/bottom whitespace, but nothing
+   is ever cropped. */
+.featured-tuition-card__image-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--color-surface-soft);
+}
+
+.featured-tuition-card__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.featured-tuition-card__image--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: var(--color-text-subtle);
+}
+
+.featured-tuition-card__badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+.featured-tuition-card__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px;
+}
+
+/* Strictly one line - a long title truncates rather than growing the card. The full title is
+   still on the <p> via the title="" attribute (hover tooltip) and, of course, the detail page. */
+.featured-tuition-card__title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--color-text-strong);
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.featured-tuition-card__meta {
+  font-size: 0.82rem;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.featured-tuition-card__meta--muted {
+  color: var(--color-text-muted);
+}
+
+.featured-tuition-card__footer {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.featured-tuition-card__price {
+  font-weight: 700;
+  color: var(--color-text-strong);
+  font-size: 0.92rem;
+}
+
+.featured-tuition-card__cta {
+  margin-left: auto;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-accent-dark);
+  white-space: nowrap;
+}

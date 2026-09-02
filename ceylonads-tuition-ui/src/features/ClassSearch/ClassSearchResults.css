@@ -1,0 +1,146 @@
+.class-search-results {
+  display: flex;
+  flex-direction: column;
+}
+
+.class-search-results__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.class-search-results__title {
+  font-size: 1.6rem;
+}
+
+.class-search-results__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.class-search-results__intro {
+  color: var(--color-text-muted);
+  margin: -8px 0 16px;
+  font-size: 0.92rem;
+}
+
+.class-search-results__intro a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.class-search-results__toolbar {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  margin-bottom: 4px;
+}
+
+.class-search-results__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.class-search-results__sort select {
+  padding: 6px 10px;
+}
+
+.class-search-results__filter-btn {
+  display: none;
+  position: relative;
+  padding: 8px 14px;
+}
+
+.class-search-results__filter-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--color-accent);
+  color: #fff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 0.68rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.class-search-results__count {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin: 10px 0 12px;
+}
+
+.class-search-results__query {
+  color: var(--color-text-strong);
+  font-weight: 600;
+}
+
+.class-search-results__promo-banner {
+  margin-bottom: 20px;
+}
+
+.class-search-results__promo-banner-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-subtle);
+  margin-bottom: 6px;
+}
+
+/* TUITION_SEARCH_BOOST strip - sits above the organic grid inside __main, never inside the
+   organic pagination. Renders nothing (FeaturedTuitionCarousel returns null) when there is no
+   active promotion and placeholderCount is 0, so no empty gap shows while loading. */
+.class-search-results__boosted:has(.featured-tuition-carousel) {
+  margin-bottom: 20px;
+}
+
+.class-search-results__body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.class-search-results__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Promotions column sits beside the results once there is enough width for both to breathe (see
+   the matching breakpoint in ClassGrid.css) - below that, PromotionSidebar simply stacks under the
+   results in normal document order (see PROMOTION_SIDEBAR "Tablet"/"Mobile" behavior). */
+@media (min-width: 1080px) {
+  .class-search-results__body {
+    grid-template-columns: 1fr 300px;
+  }
+}
+
+@media (max-width: 760px) {
+  .class-search-results__toolbar {
+    display: none;
+  }
+
+  .class-search-results__filter-btn {
+    display: inline-flex;
+  }
+
+  .class-search-results__head {
+    align-items: flex-start;
+  }
+}

@@ -1,0 +1,17 @@
+.class-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  /* Grid's default align-items: stretch makes every card in a row match the tallest one - combined
+     with ClassCard's fixed 4:5 media frame and flex-column body, this keeps rows visually even
+     regardless of title/chip-count/poster-ratio differences between listings. */
+}
+
+/* Caps at 3 columns (3x3 = 9 per page, matching the backend page size) at every width from here
+   up, including next to the promotions sidebar (see ClassSearchResults.css's matching breakpoint)
+   - never 4, so portrait poster cards keep enough width to stay readable. */
+@media (min-width: 640px) {
+  .class-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

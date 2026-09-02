@@ -1,0 +1,126 @@
+.admin-ad-review__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 16px;
+}
+
+.admin-ad-review__back:hover {
+  color: var(--color-primary);
+}
+
+.admin-ad-review__layout {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.admin-ad-review__info {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+}
+
+.admin-ad-review__top {
+  display: flex;
+}
+
+.admin-ad-review__price {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.admin-ad-review__title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.admin-ad-review__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-ad-review__meta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-ad-review__seller {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-ad-review__seller-icon {
+  font-size: 2.4rem;
+  color: var(--color-text-subtle);
+  flex-shrink: 0;
+}
+
+.admin-ad-review__seller-label {
+  font-size: 0.78rem;
+  color: var(--color-text-subtle);
+}
+
+.admin-ad-review__seller-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.admin-ad-review__seller-phone {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.admin-ad-review__description h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.admin-ad-review__description p {
+  font-size: 0.92rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.admin-ad-review__actions {
+  display: flex;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.admin-ad-review__actions .btn {
+  flex: 1;
+}
+
+@media (max-width: 860px) {
+  .admin-ad-review__layout {
+    grid-template-columns: 1fr;
+  }
+}

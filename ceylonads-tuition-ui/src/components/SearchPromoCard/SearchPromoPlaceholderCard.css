@@ -1,0 +1,13 @@
+.search-promo-card--placeholder {
+  border: 1px dashed var(--color-accent);
+}
+
+.search-promo-card--placeholder:hover {
+  box-shadow: none;
+  transform: none;
+  border-color: var(--color-accent-dark);
+}
+
+.search-promo-card--placeholder .search-promo-card__image {
+  opacity: 0.9;
+}

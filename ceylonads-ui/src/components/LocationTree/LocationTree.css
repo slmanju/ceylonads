@@ -1,0 +1,39 @@
+.location-tree {
+  display: flex;
+  flex-direction: column;
+}
+
+.location-tree__item {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.location-tree__item:last-child {
+  border-bottom: none;
+}
+
+.location-tree__node {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+}
+
+.location-tree__name {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.location-tree__type {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-text-subtle);
+  background: var(--color-bg);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.location-tree__children {
+  display: flex;
+  flex-direction: column;
+}

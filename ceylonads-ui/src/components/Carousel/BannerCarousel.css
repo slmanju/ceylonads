@@ -1,0 +1,66 @@
+.banner-carousel {
+  position: relative;
+}
+
+.banner-carousel__viewport {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+}
+
+.banner-carousel__track {
+  display: flex;
+  width: 100%;
+}
+
+.banner-carousel__slide {
+  flex: 0 0 100%;
+  min-width: 100%;
+}
+
+.banner-carousel__slide a {
+  display: block;
+}
+
+.banner-carousel__image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .banner-carousel__image {
+    height: 150px;
+  }
+}
+
+/* Subdued, compact arrow controls: dots remain the primary nav; arrows sit
+   inset from the edges and only gain full presence on hover/focus. */
+.banner-carousel__viewport .carousel-arrow {
+  width: 28px;
+  height: 28px;
+  font-size: 0.75rem;
+  border: none;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(2px);
+  box-shadow: none;
+  opacity: 0.6;
+  transition: opacity 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.banner-carousel__viewport .carousel-arrow--prev {
+  left: 10px;
+}
+
+.banner-carousel__viewport .carousel-arrow--next {
+  right: 10px;
+}
+
+.banner-carousel__viewport .carousel-arrow:hover,
+.banner-carousel__viewport .carousel-arrow:focus-visible {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: var(--shadow-sm);
+}

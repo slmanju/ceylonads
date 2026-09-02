@@ -1,0 +1,153 @@
+.admin-promotion-slots-page__table-wrap {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+}
+
+.admin-promotion-slots-page__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.admin-promotion-slots-page__table th {
+  text-align: left;
+  padding: 12px 16px;
+  color: var(--color-text-muted);
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.admin-promotion-slots-page__table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  vertical-align: middle;
+}
+
+.admin-promotion-slots-page__table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-promotion-slots-page__name {
+  font-weight: 700;
+}
+
+.admin-promotion-slots-page__code {
+  font-size: 0.78rem;
+  color: var(--color-text-subtle);
+}
+
+.admin-promotion-slots-page__status {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+}
+
+.admin-promotion-slots-page__status--active {
+  background: #f0fdf4;
+  color: var(--color-success);
+}
+
+.admin-promotion-slots-page__plan-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.admin-promotion-slots-page__no-plans {
+  color: var(--color-text-subtle);
+  font-size: 0.8rem;
+}
+
+.admin-promotion-slots-page__actions {
+  display: flex;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.admin-promotion-slots-page__actions .btn {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+.admin-promotion-slots-page__usage {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-promotion-slots-page__usage-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.admin-promotion-slots-page__usage-stats > div {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.admin-promotion-slots-page__usage-stats span {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.admin-promotion-slots-page__usage-stats p {
+  margin: 2px 0 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+}
+
+.admin-promotion-slots-page__usage-heading {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.admin-promotion-slots-page__usage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-promotion-slots-page__usage-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .admin-promotion-slots-page__usage-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

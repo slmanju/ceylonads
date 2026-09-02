@@ -1,0 +1,75 @@
+.review-step {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.review-step__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.review-step__label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-subtle);
+}
+
+.review-step__label--spaced {
+  margin-top: 12px;
+}
+
+.review-step__value {
+  margin-top: 2px;
+  font-weight: 600;
+  color: var(--color-text-strong);
+}
+
+.review-step__value--price {
+  color: var(--color-accent-dark);
+}
+
+.review-step__description {
+  font-weight: 400;
+  color: var(--color-text);
+  white-space: pre-wrap;
+}
+
+.review-step__edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  height: fit-content;
+  white-space: nowrap;
+}
+
+.review-step__photo-strip {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.review-step__photo-strip img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.review-step__submit {
+  margin-top: 20px;
+}

@@ -1,0 +1,34 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.slmanju.ceylonads'
+version = '1.0.0'
+description = 'CeylonAds AWS CDK infrastructure'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+ext {
+    cdkVersion = '2.265.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "software.amazon.awscdk:aws-cdk-lib:${cdkVersion}"
+    implementation 'software.constructs:constructs:[10.0.0,11.0.0)'
+}
+
+application {
+    mainClass = 'com.slmanju.ceylonads.infra.CeylonAdsInfraApp'
+}
+
+tasks.named('run') {
+    standardInput = System.in
+}

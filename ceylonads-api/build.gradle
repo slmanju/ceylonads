@@ -1,0 +1,61 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.1.0'
+}
+
+ext {
+    // Pinned explicitly: this Gradle/plugin combination does not reliably apply
+    // the Spring Boot BOM's managed versions to the compileJava classpath.
+    springBootVersion = '4.1.0'
+}
+
+group = 'com.slmanju'
+version = '0.0.1-SNAPSHOT'
+description = 'CeylonAds classified ads backend'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(26)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-validation:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-security:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-flyway:${springBootVersion}"
+    implementation 'org.flywaydb:flyway-core:12.4.0'
+    implementation 'org.flywaydb:flyway-database-postgresql:12.4.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.0'
+
+    implementation platform('com.google.cloud:libraries-bom:26.70.0')
+    implementation 'com.google.cloud:google-cloud-storage'
+
+    implementation platform('software.amazon.awssdk:bom:2.29.29')
+    implementation 'software.amazon.awssdk:s3'
+
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+    runtimeOnly 'com.h2database:h2:2.4.240'
+    runtimeOnly 'org.postgresql:postgresql:42.7.11'
+    runtimeOnly "org.springframework.boot:spring-boot-h2console:${springBootVersion}"
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+    testImplementation "org.springframework.boot:spring-boot-webmvc-test:${springBootVersion}"
+    testImplementation 'org.springframework.security:spring-security-test:7.1.0'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-parameters']
+}

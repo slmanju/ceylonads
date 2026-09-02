@@ -1,0 +1,43 @@
+.category-step__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.category-step__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text-strong);
+  text-align: center;
+}
+
+.category-step__card:hover {
+  border-color: var(--color-primary);
+}
+
+.category-step__card--selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.category-step__card-icon {
+  font-size: 1.5rem;
+  color: var(--color-primary);
+}
+
+.category-step__check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: var(--color-primary);
+}

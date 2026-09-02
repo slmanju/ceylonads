@@ -1,0 +1,78 @@
+.post-ad-step__title {
+  font-size: 1.2rem;
+}
+
+.post-ad-step__subtitle {
+  color: var(--color-text-muted);
+  margin-top: 6px;
+  margin-bottom: 22px;
+  font-size: 0.9rem;
+}
+
+.post-ad-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.post-ad-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.post-ad-form__field input,
+.post-ad-form__field textarea {
+  width: 100%;
+}
+
+.post-ad-form__hint-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.8rem;
+}
+
+.post-ad-form__error {
+  color: var(--color-danger);
+}
+
+.post-ad-form__hint {
+  color: var(--color-text-muted);
+}
+
+.post-ad-form__counter {
+  color: var(--color-text-subtle);
+  margin-left: auto;
+}
+
+.post-ad-contact {
+  border-top: 1px solid var(--color-border);
+  padding-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.post-ad-contact__title {
+  font-size: 1rem;
+}
+
+.post-ad-contact__hint {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: -8px;
+}
+
+.post-ad-contact__checkbox {
+  display: flex;
+  align-items: center;
+}
+
+.post-ad-contact__checkbox label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: var(--color-text);
+}

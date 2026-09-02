@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /register
+Disallow: /post-ad
+Disallow: /my-ads
+Disallow: /my-promotions
+Disallow: /my-payments
+Disallow: /admin
+
+Sitemap: /sitemap.xml

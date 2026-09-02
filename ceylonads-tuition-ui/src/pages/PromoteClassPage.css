@@ -1,0 +1,311 @@
+.promote-class-page {
+  padding: 24px 20px 56px;
+  max-width: 900px;
+}
+
+.promote-class-page__title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin-bottom: 20px;
+}
+
+.promote-class-page__back {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.promote-class-page__ad-summary {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.promote-class-page__ad-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text-strong);
+}
+
+.promote-class-page__ad-price {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-accent-dark);
+  margin-top: 2px;
+}
+
+.promote-class-page__ad-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.promote-class-page__current {
+  background: var(--color-accent-light);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.promote-class-page__current-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.promote-class-page__current-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.promote-class-page__current-name {
+  font-weight: 600;
+  color: var(--color-text-strong);
+  font-size: 0.9rem;
+}
+
+.promote-class-page__current-status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.promote-class-page__current-status--expired,
+.promote-class-page__current-status--cancelled {
+  background: var(--color-text-subtle);
+}
+
+.promote-class-page__section-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 14px;
+}
+
+.promote-class-page__plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.promotion-plan-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  gap: 6px;
+}
+
+.promotion-plan-card__placement {
+  align-self: flex-start;
+  background: var(--color-accent-light);
+  color: var(--color-accent-dark);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  margin-bottom: 4px;
+}
+
+.promotion-plan-card__name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-strong);
+}
+
+.promotion-plan-card__description {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  flex-grow: 1;
+}
+
+.promotion-plan-card__duration {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.promotion-plan-card__price {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--color-accent-dark);
+  margin-top: 2px;
+}
+
+.promotion-plan-card__price-block {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.promotion-plan-card__offer-badge {
+  align-self: flex-start;
+  background: var(--color-accent);
+  color: var(--color-surface);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  margin-bottom: 2px;
+}
+
+.promotion-plan-card__price--current {
+  margin-top: 0;
+}
+
+.promotion-plan-card__price-normal {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.promotion-plan-card__price-normal-amount {
+  text-decoration: line-through;
+}
+
+.promotion-plan-card__savings {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+.promotion-plan-card__availability {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.promotion-plan-card__select {
+  margin-top: 12px;
+  width: 100%;
+}
+
+.promotion-plan-card__select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.promote-class-page__confirm {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  max-width: 520px;
+}
+
+.promote-class-page__hint {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin: 16px 0 0;
+}
+
+.promote-class-page__error {
+  background: #fef2f2;
+  color: var(--color-danger);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.promote-class-page__confirm-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.promote-class-page__confirm-details > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 8px;
+}
+
+.promote-class-page__confirm-details dt {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.promote-class-page__confirm-details dd {
+  font-size: 0.95rem;
+  color: var(--color-text-strong);
+  font-weight: 700;
+  text-align: right;
+}
+
+.promote-class-page__confirm-normal-price {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.promote-class-page__confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.promote-class-page__success {
+  max-width: 520px;
+  margin: 40px auto;
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 40px 28px;
+}
+
+.promote-class-page__success-icon {
+  font-size: 2.4rem;
+  color: var(--color-success);
+  margin-bottom: 12px;
+}
+
+.promote-class-page__success h1 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin-bottom: 10px;
+}
+
+.promote-class-page__success p {
+  font-size: 0.92rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.promote-class-page__success-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}

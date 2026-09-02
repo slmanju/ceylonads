@@ -1,0 +1,73 @@
+.my-promotions-page {
+  padding: 24px 20px 56px;
+}
+
+.my-promotions-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.my-promotions-page__header h1 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.my-promotions-page__table-wrap {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+}
+
+.my-promotions-page__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.my-promotions-page__table th {
+  text-align: left;
+  padding: 12px 16px;
+  color: var(--color-text-muted);
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.my-promotions-page__table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.my-promotions-page__table tr:last-child td {
+  border-bottom: none;
+}
+
+.my-promotions-page__table a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.my-promotions-page__cancel {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+.my-promotions-page__header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.my-promotions-page__pay {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}

@@ -1,0 +1,77 @@
+.post-ad-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 24px 0 32px;
+  flex-wrap: wrap;
+}
+
+.post-ad-stepper__item {
+  display: flex;
+  align-items: center;
+}
+
+.post-ad-stepper__button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 10px;
+}
+
+.post-ad-stepper__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.post-ad-stepper__dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-soft);
+  border: 2px solid var(--color-border);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.post-ad-stepper__button--current .post-ad-stepper__dot {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.post-ad-stepper__button--done .post-ad-stepper__dot {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.post-ad-stepper__label {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.post-ad-stepper__connector {
+  width: 32px;
+  height: 2px;
+  background: var(--color-border);
+  margin: 0 2px;
+}
+
+@media (max-width: 600px) {
+  .post-ad-stepper__label {
+    display: none;
+  }
+
+  .post-ad-stepper__connector {
+    width: 16px;
+  }
+}

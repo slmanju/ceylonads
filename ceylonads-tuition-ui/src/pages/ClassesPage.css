@@ -1,0 +1,17 @@
+.classes-page {
+  padding: 28px 20px 56px;
+}
+
+/* Fixed top promotions - page-level advertising space that sits above "Browse Tuition Classes"
+   and is never tied to the current search filters (see ClassesPage.tsx). Sits directly on the
+   page's white background - no outer panel - since each card's own PROMOTED badge and the
+   placeholder cards' cream/gold accents already read as promotional inventory on their own. */
+.classes-page__top-promotions {
+  margin-bottom: 28px;
+}
+
+@media (max-width: 600px) {
+  .classes-page__top-promotions {
+    margin-bottom: 24px;
+  }
+}

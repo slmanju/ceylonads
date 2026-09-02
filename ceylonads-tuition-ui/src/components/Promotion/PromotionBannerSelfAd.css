@@ -1,0 +1,22 @@
+.promotion-banner--self {
+  background: var(--color-surface);
+  border: 1px dashed var(--color-accent);
+}
+
+.promotion-banner--self:hover {
+  box-shadow: none;
+  transform: none;
+  border-color: var(--color-accent-dark);
+}
+
+.promotion-banner--self .promotion-banner__icon {
+  background: var(--color-accent-light);
+}
+
+.promotion-banner-self-ad__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-accent-dark);
+}

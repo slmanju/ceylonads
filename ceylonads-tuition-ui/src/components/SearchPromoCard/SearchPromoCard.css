@@ -1,0 +1,106 @@
+.search-promo-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  text-decoration: none;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.search-promo-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* Compact landscape media frame (~150px tall) - deliberately much shorter than the homepage
+   FeaturedTuitionCard's 4:5 portrait frame, so the whole card lands in the ~220-260px range
+   instead of a homepage-sized discovery card. */
+.search-promo-card__image-wrap {
+  position: relative;
+  width: 100%;
+  height: 150px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--color-surface-soft);
+}
+
+/* Real advertiser artwork is never cropped - contain keeps the full uploaded poster visible.
+   The decorative placeholder illustration opts into cropping via the --cover modifier below,
+   since it carries no text of its own. */
+.search-promo-card__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.search-promo-card__image--cover {
+  object-fit: cover;
+}
+
+.search-promo-card__image--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: var(--color-text-subtle);
+}
+
+.search-promo-card__badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+}
+
+.search-promo-card__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+}
+
+.search-promo-card__title {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--color-text-strong);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-promo-card__meta {
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-promo-card__footer {
+  margin-top: auto;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.search-promo-card__price {
+  font-weight: 700;
+  color: var(--color-text-strong);
+  font-size: 0.8rem;
+}
+
+.search-promo-card__cta {
+  margin-left: auto;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--color-accent-dark);
+  white-space: nowrap;
+}

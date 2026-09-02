@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: ceylonads
+  profiles:
+    default: local
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+server:
+  port: ${PORT:8080}
+
+ceylonads:
+  jwt:
+    ttl: PT8H
+
+app:
+  # Origin the public React app is served from. sitemap.xml needs this to emit absolute page
+  # URLs since the API and the frontend are different origins in every environment.
+  public-site-url: ${PUBLIC_SITE_URL:http://localhost:5173}
+  payment:
+    bank-transfer:
+      # Phase 3 MVP: manual bank transfer only, one demo account. Local/demo values below are
+      # clearly fake; production must override every one of these via the env vars shown.
+      bank-name: ${BANK_TRANSFER_BANK_NAME:Demo Bank}
+      account-name: ${BANK_TRANSFER_ACCOUNT_NAME:CeylonAds Demo}
+      account-number: ${BANK_TRANSFER_ACCOUNT_NUMBER:0000000000}
+      branch: ${BANK_TRANSFER_BRANCH:Colombo Demo}
+      instructions: ${BANK_TRANSFER_INSTRUCTIONS:Please use your payment reference as the transfer remark so we can match your payment quickly.}

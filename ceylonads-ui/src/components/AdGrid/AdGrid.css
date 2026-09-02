@@ -1,0 +1,36 @@
+.listing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1024px) {
+  .listing-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .listing-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+/* Tuition search results: 3 columns x up to 3 rows (9 per page) on desktop, narrowing by
+   viewport - never by the fixed page size, which stays 9. */
+.listing-grid--tuition {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 1024px) {
+  .listing-grid--tuition {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .listing-grid--tuition {
+    grid-template-columns: 1fr;
+  }
+}

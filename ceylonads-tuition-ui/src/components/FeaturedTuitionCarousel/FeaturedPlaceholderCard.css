@@ -1,0 +1,37 @@
+.featured-tuition-card--placeholder {
+  background: var(--color-surface);
+  border: 1px dashed var(--color-accent);
+  align-items: stretch;
+}
+
+.featured-tuition-card--placeholder:hover {
+  box-shadow: none;
+  transform: none;
+  border-color: var(--color-accent-dark);
+}
+
+/* Slightly muted vs. FeaturedTuitionCard's full-opacity poster, so a decorative illustration
+   never gets mistaken for an actual class photo at a glance. */
+.featured-tuition-card--placeholder .featured-tuition-card__image {
+  opacity: 0.9;
+}
+
+.featured-placeholder-card__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-accent-dark);
+}
+
+.featured-placeholder-card__title {
+  font-weight: 700;
+  color: var(--color-text-strong);
+  font-size: 0.98rem;
+  line-height: 1.35;
+}
+
+.featured-placeholder-card__body-text {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}

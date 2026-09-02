@@ -1,0 +1,41 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badge--featured {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.badge--promoted {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.badge--online {
+  background: var(--color-primary-dark);
+  color: #fff;
+}
+
+.badge--home-visit {
+  background: var(--color-accent-light);
+  color: var(--color-accent-dark);
+}
+
+.badge--profile {
+  background: var(--color-neutral-soft);
+  color: var(--color-text-muted);
+}
+
+.badge--sponsored {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
