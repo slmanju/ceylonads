@@ -37,3 +37,13 @@ ceylonads:
       bucket: ${S3_BUCKET:ceylonads-media}
       public-base-url: ${S3_PUBLIC_BASE_URL:https://ceylonads-media.s3.ap-south-1.amazonaws.com}
       region: ${AWS_REGION:ap-south-1}
+
+app:
+  # Origin the main CeylonAds React app (ceylonads-ui) is served from - NOT ezClass. Used by the
+  # main-site SitemapService/SeoMetaService for /sitemap.xml, canonical URLs and OG tags on
+  # ceylonads.web.lk. Must include the scheme - a bare host produces invalid absolute URLs.
+  public-site-url: ${PUBLIC_SITE_URL:https://ceylonads.web.lk}
+  # Origin ezClass's tuition frontend (ceylonads-tuition-ui) is served from - a separate static
+  # SPA on its own domain (ezclass.lk in production), not bundled into this backend like the main
+  # site's build. tuition sitemap.xml needs this to emit absolute /classes page URLs.
+  tuition-site-url: ${EZCLASS_SITE_URL:https://ezclass.lk}

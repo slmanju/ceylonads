@@ -97,7 +97,11 @@ public class CeylonAdsApplicationStack extends Stack {
                 keyValue("S3_BUCKET", foundation.getMediaBucket().getBucketName()),
                 keyValue("S3_PUBLIC_BASE_URL", foundation.getMediaBucketPublicUrl()),
                 keyValue("AWS_REGION", getRegion()),
-                keyValue("JWT_SECRET_BASE64", config.jwtSecretBase64())
+                keyValue("JWT_SECRET_BASE64", config.jwtSecretBase64()),
+                // ceylonads-tuition-ui's own origin (see app.tuition-site-url) - without this, the
+                // app falls back to application.yml's localhost default and the ezClass sitemap
+                // emits localhost URLs instead of https://ezclass.lk.
+                keyValue("EZCLASS_SITE_URL", config.tuitionSiteUrl())
         );
 
         CfnService.ImageConfigurationProperty imageConfiguration = CfnService.ImageConfigurationProperty.builder()

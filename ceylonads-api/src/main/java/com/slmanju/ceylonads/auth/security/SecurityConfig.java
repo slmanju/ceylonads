@@ -89,11 +89,12 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/h2-console/**",
-                                "/sitemap.xml",
-                                // ezClass's own sitemap, served from a distinct path since this
-                                // backend already owns /sitemap.xml for the main-site domain (see
-                                // TuitionSitemapController).
-                                "/tuition/sitemap.xml").permitAll()
+                                "/sitemap.xml").permitAll()
+                        // ezClass's own sitemap, served from a distinct path since this backend
+                        // already owns /sitemap.xml for the main-site domain (see
+                        // TuitionSitemapController). Scoped to GET only and to this exact path -
+                        // never broadened to /tuition/** (that prefix has no other public routes).
+                        .requestMatchers(HttpMethod.GET, "/tuition/sitemap.xml").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/ads/**",
                                 "/api/tuition/**",

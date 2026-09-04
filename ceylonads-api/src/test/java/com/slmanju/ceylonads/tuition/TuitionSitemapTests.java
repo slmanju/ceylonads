@@ -77,12 +77,40 @@ class TuitionSitemapTests {
         String xml = fetchSitemap();
 
         assertTrue(xml.contains("subject=Chess</loc>"), "missing subject-only page: " + xml);
+        assertTrue(xml.contains("deliveryMode=ONLINE</loc>"), "missing deliveryMode-only page: " + xml);
         assertTrue(xml.contains("subject=Chess&amp;deliveryMode=ONLINE"), "missing subject+delivery combo: " + xml);
         assertTrue(xml.contains("subject=Chess&amp;deliveryMode=PHYSICAL"), "missing subject+delivery combo: " + xml);
         assertTrue(xml.contains("subject=Chess&amp;location=colombo"), "missing subject+location combo: " + xml);
         assertTrue(xml.contains("subject=Chess&amp;location=kandy"), "missing subject+location combo: " + xml);
         assertTrue(xml.contains(Slugs.adSlug("Sitemap Chess Colombo", onlineColombo)), "missing active class detail: " + xml);
         assertTrue(xml.contains(Slugs.adSlug("Sitemap Chess Kandy", physicalKandy)), "missing active class detail: " + xml);
+    }
+
+    @Test
+    void everyLocStartsWithTheConfiguredTuitionSiteUrl() throws Exception {
+        String token = registerAndGetToken();
+        long id = createClass(token, "Sitemap Loc Prefix Check", "Chess", "ONLINE", "colombo");
+        approveAsAdmin(id);
+
+        String xml = fetchSitemap();
+        List<String> locs = extractLocs(xml);
+
+        assertTrue(locs.size() > 2, "expected more than just homepage/classes: " + xml);
+        for (String loc : locs) {
+            assertTrue(loc.startsWith("http://localhost:5174"), "unexpected <loc> not under the configured tuition-site-url: " + loc);
+        }
+    }
+
+    @Test
+    void mainSiteAdsAreExcludedFromTheTuitionSitemap() throws Exception {
+        String token = registerAndGetToken();
+        long mainSiteAdId = createMainSiteAd(token, "Sitemap Main Site Only Car");
+        approveAsAdmin(mainSiteAdId);
+
+        String xml = fetchSitemap();
+
+        assertFalse(xml.contains(Slugs.adSlug("Sitemap Main Site Only Car", mainSiteAdId)),
+                "a MAIN_SITE ad must never appear in the Tuition sitemap: " + xml);
     }
 
     @Test
@@ -118,6 +146,35 @@ class TuitionSitemapTests {
 
     private void parseXmlOrFail(String xml) throws Exception {
         DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new InputSource(new StringReader(xml)));
+    }
+
+    private List<String> extractLocs(String xml) throws Exception {
+        var doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new InputSource(new StringReader(xml)));
+        var nodes = doc.getElementsByTagName("loc");
+        List<String> locs = new java.util.ArrayList<>();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            locs.add(nodes.item(i).getTextContent());
+        }
+        return locs;
+    }
+
+    // Generic (non-Tuition) ad creation - deliberately the plain /api/ads endpoint, which defaults
+    // sourceChannel to MAIN_SITE (see AdService.create), to prove the Tuition sitemap never leaks
+    // a main-storefront listing regardless of category/status.
+    private long createMainSiteAd(String token, String title) throws Exception {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("title", title);
+        body.put("description", "A description long enough for validation purposes.");
+        body.put("price", 1000);
+        body.put("categorySlug", "vehicles");
+        body.put("locationSlug", "colombo");
+        String response = mockMvc.perform(post("/api/ads")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(response).get("id").asLong();
     }
 
     private long createClass(String token, String title, String subject, String deliveryMode, String locationSlug) throws Exception {

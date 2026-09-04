@@ -20,7 +20,8 @@ public record EnvironmentConfig(
         String imageTag,
         boolean databasePubliclyAccessible,
         String databasePassword,
-        String jwtSecretBase64
+        String jwtSecretBase64,
+        String tuitionSiteUrl
 ) {
     public static EnvironmentConfig dev() {
         return new EnvironmentConfig(
@@ -41,7 +42,10 @@ public record EnvironmentConfig(
                 "latest",
                 true,
                 "Rambutan123",
-                "OBoxaQKuPoPm/c73dxOA3NUP3RC7xc8hn6SYBuci9Qs="
+                "OBoxaQKuPoPm/c73dxOA3NUP3RC7xc8hn6SYBuci9Qs=",
+                // No separate dev domain exists for ezClass today - points at the same production
+                // host until/unless a dedicated dev frontend is stood up.
+                "https://ezclass.lk"
         );
     }
 
@@ -66,7 +70,8 @@ public record EnvironmentConfig(
                 // Set to false once the app is stable and lock RDS back to VPC-only access.
                 true,
                 "Rambutan123",
-                "rC4Si1sWTMOZO1VLMjbUrklVQOGgh+oSSpAlOHDHwe0="
+                "rC4Si1sWTMOZO1VLMjbUrklVQOGgh+oSSpAlOHDHwe0=",
+                "https://ezclass.lk"
         );
     }
 }
