@@ -7,9 +7,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -74,4 +76,18 @@ public interface AdRepository extends JpaRepository<Ad, Long>, JpaSpecificationE
     @EntityGraph(attributePaths = {"category", "seller"})
     @Override
     List<Ad> findAll(Specification<Ad> spec);
+
+    // Tuition's scheduled expiry sweep (see TuitionExpiryScheduler): flips every stale ACTIVE ad
+    // in the given channel whose expiresAt has passed to EXPIRED, in one bulk statement rather
+    // than loading each row into memory. Channel-scoped by a real parameter (not hardcoded to
+    // TUITION) so this stays correct-by-construction if another vertical ever adopts expiry too;
+    // today only TuitionExpiryScheduler ever calls this, always with SourceChannel.TUITION. Public
+    // visibility never depends on this running promptly - AdSpecifications.notExpired/the Tuition
+    // repositories' own expiresAt checks already hide a stale ACTIVE ad immediately, this is only
+    // the eventual persisted-status cleanup layer.
+    @Modifying
+    @Query("update Ad a set a.status = com.slmanju.ceylonads.ad.entity.AdStatus.EXPIRED, a.updatedAt = :now "
+            + "where a.status = com.slmanju.ceylonads.ad.entity.AdStatus.ACTIVE and a.sourceChannel = :sourceChannel "
+            + "and a.expiresAt is not null and a.expiresAt <= :now")
+    int expireOverdue(@Param("sourceChannel") SourceChannel sourceChannel, @Param("now") Instant now);
 }

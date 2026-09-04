@@ -8,7 +8,7 @@ import { ErrorState } from "../components/ErrorState/ErrorState";
 import { EmptyState } from "../components/EmptyState/EmptyState";
 import { Seo } from "../components/Seo/Seo";
 import type { AdResponse, CompatiblePromotionPlanResponse, PromotionResponse } from "../types/api";
-import { formatPrice, formatAdPrice } from "../utils/formatPrice";
+import { formatPrice, formatAdPrice, formatPromotionPrice } from "../utils/formatPrice";
 import { formatAdLocations } from "../utils/formatLocations";
 import { getApiErrorMessage } from "../utils/apiError";
 import "./PromoteClassPage.css";
@@ -195,7 +195,7 @@ export function PromoteClassPage() {
                           <span className="promotion-plan-card__offer-badge">{plan.campaignName}</span>
                         )}
                         <p className="promotion-plan-card__price promotion-plan-card__price--current">
-                          {formatPrice(plan.currentPrice)}
+                          {formatPromotionPrice(plan.currentPrice)}
                         </p>
                         <p className="promotion-plan-card__price-normal">
                           Normal <span className="promotion-plan-card__price-normal-amount">{formatPrice(plan.price)}</span>
@@ -252,7 +252,7 @@ export function PromoteClassPage() {
             <div>
               <dt>Price</dt>
               <dd>
-                {formatPrice(selectedPlan.plan.currentPrice)}
+                {formatPromotionPrice(selectedPlan.plan.currentPrice)}
                 {selectedPlan.plan.discounted && (
                   <span className="promote-class-page__confirm-normal-price">
                     {" "}
@@ -263,7 +263,12 @@ export function PromoteClassPage() {
             </div>
           </dl>
 
-          {selectedPlan.plan.paymentRequired && (
+          <p className="promote-class-page__hint">
+            Your class will remain active for the full promotion period - if it's close to its own free-listing
+            expiry, we automatically extend it so the promotion never outlives the listing.
+          </p>
+
+          {selectedPlan.plan.paymentRequired && selectedPlan.plan.currentPrice > 0 && (
             <p className="promote-class-page__hint">
               This plan requires payment. After you submit this request, our team will contact you to arrange
               payment before the promotion goes live.

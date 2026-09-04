@@ -4,7 +4,7 @@ import type { AdResponse, PromotionResponse } from "../../types/api";
 import { resolveMediaUrl } from "../../api/apiClient";
 import { formatAdPrice } from "../../utils/formatPrice";
 import { formatAdLocations } from "../../utils/formatLocations";
-import { formatRelativeDate } from "../../utils/formatDate";
+import { formatRelativeDate, formatExpiryLabel } from "../../utils/formatDate";
 import { StatusBadge } from "../Badge/StatusBadge";
 import { PromotedBadge } from "../Badge/Badge";
 import "./MyClassCard.css";
@@ -12,19 +12,29 @@ import "./MyClassCard.css";
 interface MyClassCardProps {
   ad: AdResponse;
   onDeactivate: (ad: AdResponse) => void;
+  onRenew: (ad: AdResponse) => void;
+  renewing?: boolean;
   // This class's own promotions only (any placement/plan), newest first - drives the
   // Promote / Manage Promotion / Promote Again state below. Empty when it has none.
   promotions?: PromotionResponse[];
 }
 
 const LIVE_STATUSES = new Set(["PENDING_PAYMENT", "PENDING_APPROVAL", "ACTIVE"]);
+const RENEWAL_WINDOW_DAYS = 7;
 
-export function MyClassCard({ ad, onDeactivate, promotions = [] }: MyClassCardProps) {
+export function MyClassCard({ ad, onDeactivate, onRenew, renewing = false, promotions = [] }: MyClassCardProps) {
   const image = ad.media[0];
   const canView = ad.status === "ACTIVE";
   const canDeactivate = ad.status !== "DEACTIVATED";
   const canPromote = ad.status === "ACTIVE";
   const locationLabel = formatAdLocations(ad.locations);
+  const expiryLabel = formatExpiryLabel(ad.expiresAt);
+
+  // Mirrors the backend's renewal-eligibility rule (see TuitionClassService.renew): EXPIRED, or
+  // ACTIVE and within 7 days of expiring. Purely a UX hint - the backend re-checks eligibility
+  // itself and is authoritative.
+  const daysRemaining = ad.expiresAt ? Math.ceil((new Date(ad.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
+  const canRenew = ad.status === "EXPIRED" || (ad.status === "ACTIVE" && daysRemaining !== null && daysRemaining <= RENEWAL_WINDOW_DAYS);
 
   const hasLivePromotion = promotions.some((p) => LIVE_STATUSES.has(p.status));
   const hasActivePromotion = promotions.some((p) => p.status === "ACTIVE");
@@ -57,7 +67,7 @@ export function MyClassCard({ ad, onDeactivate, promotions = [] }: MyClassCardPr
               {locationLabel}
             </span>
           )}
-          <span>{formatRelativeDate(ad.publishedAt ?? ad.createdAt)}</span>
+          <span>{expiryLabel ?? formatRelativeDate(ad.publishedAt ?? ad.createdAt)}</span>
         </div>
 
         <div className="my-class-card__actions">
@@ -73,6 +83,16 @@ export function MyClassCard({ ad, onDeactivate, promotions = [] }: MyClassCardPr
             <Link to={`/my-ads/${ad.id}/promote`} className="btn btn-accent my-class-card__action">
               {promoteLabel}
             </Link>
+          )}
+          {canRenew && (
+            <button
+              type="button"
+              className="btn btn-accent my-class-card__action"
+              onClick={() => onRenew(ad)}
+              disabled={renewing}
+            >
+              {renewing ? "Renewing…" : "Renew"}
+            </button>
           )}
           {canDeactivate && (
             <button type="button" className="btn btn-outline my-class-card__action" onClick={() => onDeactivate(ad)}>

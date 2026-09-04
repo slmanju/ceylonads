@@ -80,6 +80,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* The illustration is taller than the text column, so the grid row's auto height (and thus
+     the hero's top/bottom whitespace) is governed entirely by this column. Trimming the row's
+     bottom slack (not top, to avoid the image riding up under the sticky header) shrinks the
+     hero without touching the image's own rendered size/aspect. */
+  margin-bottom: -22px;
 }
 
 .tuition-hero__media-image {
@@ -99,12 +104,12 @@
 /* Section immediately after the hero (Featured Classes today) - tighter top gap since the
    hero no longer has its own bottom padding to contribute to the visual spacing below it. */
 .tuition-hero + .tuition-home__section {
-  padding-top: 20px;
+  padding-top: 10px;
 }
 
 .tuition-home__latest-layout {
   display: grid;
-  grid-template-columns: 1fr 280px;
+  grid-template-columns: 1fr 300px;
   gap: 24px;
   align-items: start;
 }
@@ -290,7 +295,10 @@
   }
 
   .tuition-hero__media {
+    /* Stacked mobile layout: the media is the last flow item, not a grid row peer, so the
+       desktop-only row-height trim (see base rule) doesn't apply and must not carry over. */
     margin-top: 24px;
+    margin-bottom: 0;
   }
 
   .tuition-hero__media-image {

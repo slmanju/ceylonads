@@ -73,6 +73,7 @@ public class AdMapper {
                 ad.getStatus(),
                 ad.getCreatedAt(),
                 ad.getPublishedAt(),
+                ad.getExpiresAt(),
                 ad.getReviewedAt(),
                 mediaResponses,
                 promoted,

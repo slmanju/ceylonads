@@ -3,6 +3,7 @@ package com.slmanju.ceylonads.promotion;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slmanju.ceylonads.common.config.LocalDataSeeder;
+import com.slmanju.ceylonads.promotion.repository.PromotionCampaignRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -40,6 +42,9 @@ class PromotionCampaignPurchaseSnapshotTests {
     @Autowired
     private LocalDataSeeder seeder;
 
+    @Autowired
+    private PromotionCampaignRepository promotionCampaignRepository;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
@@ -48,9 +53,18 @@ class PromotionCampaignPurchaseSnapshotTests {
     }
 
     @Test
+    @Transactional
     void purchasePriceIsServerResolvedAndSurvivesLaterCampaignChanges() throws Exception {
         String kamalToken = loginAndGetToken("kamal", "customer123");
         String adminToken = loginAndGetToken("admin", "admin123");
+
+        // The real EZCLASS_LAUNCH_FREE launch campaign (live by default since V27) already covers
+        // this plan/channel/window, so it must step aside for this test's own throwaway fixed-price
+        // campaign - rolled back automatically at the end since this test is @Transactional.
+        long launchId = promotionCampaignRepository.findByCode("EZCLASS_LAUNCH_FREE").orElseThrow().getId();
+        mockMvc.perform(patch("/api/admin/promotion-campaigns/" + launchId + "/deactivate")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk());
 
         long adId = createApprovedTuitionClass(kamalToken, "Snapshot Class " + UUID.randomUUID());
         long planId = planIdByCode(kamalToken, adId, "TUITION_HOME_FEATURED_30D");

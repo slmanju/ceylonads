@@ -48,9 +48,9 @@ export function PhotosStep({ existingMedia, pendingPhotos, onAddFiles, onRemoveP
   return (
     <div className="post-ad-step">
       <h2 className="post-ad-step__title">Add photos</h2>
-      <p className="post-ad-step__subtitle">Ads with photos of your classroom or materials get more responses.</p>
+      <p className="post-ad-step__subtitle">Classes with photos of your classroom or materials get more responses.</p>
       <p className="post-ad-form__hint">
-        Recommended poster ratio: 4:5 (e.g. 1080 × 1350). Portrait posters work best for tuition ads.
+        Recommended poster ratio: 4:5 (e.g. 1080 × 1350). Portrait posters work best for tuition classes.
       </p>
 
       {remainingSlots > 0 && (

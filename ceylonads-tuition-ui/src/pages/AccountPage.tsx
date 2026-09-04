@@ -20,7 +20,7 @@ export function AccountPage() {
             My Classes
           </Link>
           <Link to="/post-ad" className="btn btn-primary btn-block">
-            Post Tuition Ad
+            Post a Class
           </Link>
           <button type="button" className="btn btn-outline btn-block" onClick={logout}>
             Logout

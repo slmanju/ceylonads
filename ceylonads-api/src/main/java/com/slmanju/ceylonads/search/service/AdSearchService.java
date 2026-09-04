@@ -114,13 +114,9 @@ public class AdSearchService {
 
     // applyPromotionBoost=false skips the CATEGORY_FEATURED/TOP_SEARCH ranking boost below entirely
     // (content is always exactly `size` purely organic ads, never fewer, and totalElements reflects
-    // only baseSpec's match count) - used by TuitionClassService.search, whose vertical has its own
-    // dedicated Search Boost product (TUITION_SEARCH_BOOST) rendered as a separate, additive
-    // carousel (see TuitionFeaturedService / ClassSearchResults.tsx), never mixed into or reducing
-    // these organic results. Without this, a Tuition ad's Homepage Featured promotion (TUITION_
-    // FEATURED, whose slot also happens to be CATEGORY_FEATURED-typed) would incorrectly rank-boost
-    // and badge that ad here too, since the generic boost below only checks placementType, not the
-    // exact slot a Tuition product was actually purchased for.
+    // only baseSpec's match count). Not used by TuitionClassService.search any more - Tuition's own
+    // Search Boost product (TUITION_SEARCH_BOOST) ranks inside these same results via the
+    // slot-code overload below, rather than opting out of ranking boost entirely.
     @Transactional(readOnly = true)
     public PageResponse<AdResponse> search(
             String q,
@@ -135,68 +131,7 @@ public class AdSearchService {
             SourceChannel channel,
             boolean applyPromotionBoost) {
 
-        if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0) {
-            throw new BadRequestException("minPrice must not be greater than maxPrice");
-        }
-
-        int safePage = (page == null || page < 0) ? 0 : page;
-        int safeSize = (size == null || size < 1) ? 20 : Math.min(size, MAX_PAGE_SIZE);
-        // NEWEST covers both "no sort requested" and an explicit ?sort=newest, so it's the only
-        // option relevance ranking layers onto (createdAt DESC as the tiebreaker/fallback when q
-        // is blank keeps this identical to today's behavior). oldest/price_asc/price_desc are an
-        // explicit ask for a specific ordering and stay exactly as before, untouched by relevance.
-        AdSortOption sortOption = AdSortOption.fromParam(sort);
-
-        attributeFilterValidator.validate(attributeFilters);
-
-        // category=vehicles must also match Cars/Motorcycles/... ads, so the slug resolves to the
-        // category itself plus every descendant id rather than an exact-slug join.
-        Set<Long> categoryIds = null;
-        if (category != null && !category.isBlank()) {
-            Category resolvedCategory = categories.findBySlugAndActiveTrue(category)
-                    .orElseThrow(() -> new NotFoundException("Category not found: " + category));
-            categoryIds = categoryHierarchy.descendantIdsInclusive(resolvedCategory);
-        }
-
-        // Same reasoning as category: a parent location (province/district) must include every
-        // descendant location's ads.
-        Set<Long> locationIds = null;
-        if (location != null && !location.isBlank()) {
-            Location resolvedLocation = locations.findBySlugAndActiveTrue(location)
-                    .orElseThrow(() -> new NotFoundException("Location not found: " + location));
-            locationIds = locationHierarchy.descendantIdsInclusive(resolvedLocation);
-        }
-
-        // Several of these legitimately come back null (e.g. AdKeywordSpecifications.matches(q)
-        // when q is blank) and get filtered out below - List.of(...) would reject those nulls
-        // outright, so build the list by hand instead.
-        List<Specification<Ad>> specs = new ArrayList<>();
-        specs.add(AdSpecifications.active());
-        // Channel boundary: every result/count query built from baseSpec below (promoted pool,
-        // normal pool, and the matching count) inherits this, so pagination can never drift
-        // between content and totalElements. Callers pick their own channel - AdController's
-        // generic /api/ads always passes MAIN_SITE; TuitionClassController's tuition-scoped search
-        // passes TUITION - so this same filtering/pagination/promotion machinery serves both
-        // verticals without either one leaking into the other's results.
-        specs.add(AdSpecifications.sourceChannel(channel));
-        specs.add(AdKeywordSpecifications.matches(q));
-        specs.add(AdSpecifications.categoryIdIn(categoryIds));
-        specs.add(AdSpecifications.locationIdIn(locationIds));
-        specs.add(AdSpecifications.minPrice(minPrice));
-        specs.add(AdSpecifications.maxPrice(maxPrice));
-
-        for (AttributeFilterCriterion criterion : attributeFilters) {
-            specs.add(criterion.isRange()
-                    ? AdAttributeSpecifications.hasAttributeNumberInRange(criterion.key(), criterion.min(), criterion.max())
-                    : AdAttributeSpecifications.hasAttributeValue(criterion.key(), criterion.value()));
-        }
-
-        // Attribute filters are folded into this same baseSpec, so both the promoted and normal
-        // pools below are filtered identically - promotion changes ranking, never relevance.
-        Specification<Ad> baseSpec = specs.stream()
-                .filter(Objects::nonNull)
-                .reduce(Specification::and)
-                .orElseThrow();
+        Specification<Ad> baseSpec = buildBaseSpecification(q, category, location, minPrice, maxPrice, attributeFilters, channel);
 
         // The promoted pool is expected to stay small (it's a paid, limited placement), so it's
         // fetched eagerly and sorted in Java; the potentially large "everything else" pool is
@@ -226,6 +161,61 @@ public class AdSearchService {
             allPromoted = List.of();
             visibleCount = 0;
         }
+
+        return assemblePage(baseSpec, allPromoted, visibleCount, page, size, sort, q);
+    }
+
+    // Tuition's Search Boost (TUITION_SEARCH_BOOST): ranks matching ads with a currently active
+    // promotion in this EXACT slot code first within the same organic result set - boosted ads
+    // occupy one of the normal `size` results, they are never additional to it, and every filter/
+    // sort/pagination rule below is identical to the placement-type overload above. Slot-code
+    // (rather than PlacementType) based because TUITION_SEARCH_BOOST's placement type can be shared
+    // with other, unrelated slots - see AdPromotionSpecifications.hasActivePromotionSlotCode.
+    @Transactional(readOnly = true)
+    public PageResponse<AdResponse> search(
+            String q,
+            String category,
+            String location,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            Integer page,
+            Integer size,
+            String sort,
+            List<AttributeFilterCriterion> attributeFilters,
+            SourceChannel channel,
+            String boostSlotCode) {
+
+        Specification<Ad> baseSpec = buildBaseSpecification(q, category, location, minPrice, maxPrice, attributeFilters, channel);
+
+        List<Ad> allPromoted = List.of();
+        int visibleCount = 0;
+        if (boostSlotCode != null && !boostSlotCode.isBlank()) {
+            allPromoted = new ArrayList<>(ads.findAll(baseSpec.and(AdPromotionSpecifications.hasActivePromotionSlotCode(boostSlotCode))));
+            Map<Long, Instant> startsAtByAdId = promotionService.activeStartsAtForAdsBySlotCode(
+                    allPromoted.stream().map(Ad::getId).toList(), boostSlotCode);
+            allPromoted.sort(Comparator.comparing(
+                    (Ad ad) -> startsAtByAdId.getOrDefault(ad.getId(), Instant.EPOCH)).reversed());
+            visibleCount = promotionService.visibleCountForSlotCode(boostSlotCode);
+        }
+
+        return assemblePage(baseSpec, allPromoted, visibleCount, page, size, sort, q);
+    }
+
+    // Shared by both search() overloads above: given a resolved, already-priority-sorted promoted
+    // pool (which may be empty), splits it against `visibleCount`, excludes the visible promoted
+    // ads from the normal DB-paginated pool, and windows/maps both pools into one page - so ranking
+    // boost by placement type and by exact slot code share identical pagination/totalElements/
+    // promoted-flag semantics instead of two parallel implementations.
+    private PageResponse<AdResponse> assemblePage(
+            Specification<Ad> baseSpec, List<Ad> allPromoted, int visibleCount, Integer page, Integer size, String sort, String q) {
+        int safePage = (page == null || page < 0) ? 0 : page;
+        int safeSize = (size == null || size < 1) ? 20 : Math.min(size, MAX_PAGE_SIZE);
+        // NEWEST covers both "no sort requested" and an explicit ?sort=newest, so it's the only
+        // option relevance ranking layers onto (createdAt DESC as the tiebreaker/fallback when q
+        // is blank keeps this identical to today's behavior). oldest/price_asc/price_desc are an
+        // explicit ask for a specific ordering and stay exactly as before, untouched by relevance.
+        AdSortOption sortOption = AdSortOption.fromParam(sort);
+
         List<Ad> promotedAds = allPromoted.size() > visibleCount ? allPromoted.subList(0, visibleCount) : allPromoted;
 
         Set<Long> boostedIds = promotedAds.stream().map(Ad::getId).collect(Collectors.toSet());
@@ -276,6 +266,74 @@ public class AdSearchService {
         boolean last = windowEnd >= totalElements;
 
         return new PageResponse<>(content, safePage, safeSize, totalElements, totalPages, first, last);
+    }
+
+    // The reusable "which ads match these filters" predicate behind both search() overloads above -
+    // category/location slug resolution (self + descendants), price range, keyword, and attr.<key>
+    // filters, always scoped to `channel` and to active/unexpired ads.
+    public Specification<Ad> buildBaseSpecification(
+            String q,
+            String category,
+            String location,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            List<AttributeFilterCriterion> attributeFilters,
+            SourceChannel channel) {
+        if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0) {
+            throw new BadRequestException("minPrice must not be greater than maxPrice");
+        }
+
+        attributeFilterValidator.validate(attributeFilters);
+
+        // category=vehicles must also match Cars/Motorcycles/... ads, so the slug resolves to the
+        // category itself plus every descendant id rather than an exact-slug join.
+        Set<Long> categoryIds = null;
+        if (category != null && !category.isBlank()) {
+            Category resolvedCategory = categories.findBySlugAndActiveTrue(category)
+                    .orElseThrow(() -> new NotFoundException("Category not found: " + category));
+            categoryIds = categoryHierarchy.descendantIdsInclusive(resolvedCategory);
+        }
+
+        // Same reasoning as category: a parent location (province/district) must include every
+        // descendant location's ads.
+        Set<Long> locationIds = null;
+        if (location != null && !location.isBlank()) {
+            Location resolvedLocation = locations.findBySlugAndActiveTrue(location)
+                    .orElseThrow(() -> new NotFoundException("Location not found: " + location));
+            locationIds = locationHierarchy.descendantIdsInclusive(resolvedLocation);
+        }
+
+        // Several of these legitimately come back null (e.g. AdKeywordSpecifications.matches(q)
+        // when q is blank) and get filtered out below - List.of(...) would reject those nulls
+        // outright, so build the list by hand instead.
+        List<Specification<Ad>> specs = new ArrayList<>();
+        specs.add(AdSpecifications.active());
+        // Channel boundary: every result/count query built from this spec inherits this, so
+        // pagination can never drift between content and totalElements. Callers pick their own
+        // channel - AdController's generic /api/ads always passes MAIN_SITE; TuitionClassController
+        // passes TUITION - so this same filtering machinery serves both verticals without either
+        // one leaking into the other's results.
+        specs.add(AdSpecifications.sourceChannel(channel));
+        // No-op for MAIN_SITE/BOARDING (expiresAt is always null there); this is what makes an
+        // expired TUITION listing disappear from search/browse the instant expiresAt passes,
+        // without waiting for the scheduled status flip to EXPIRED.
+        specs.add(AdSpecifications.notExpired(Instant.now()));
+        specs.add(AdKeywordSpecifications.matches(q));
+        specs.add(AdSpecifications.categoryIdIn(categoryIds));
+        specs.add(AdSpecifications.locationIdIn(locationIds));
+        specs.add(AdSpecifications.minPrice(minPrice));
+        specs.add(AdSpecifications.maxPrice(maxPrice));
+
+        for (AttributeFilterCriterion criterion : attributeFilters) {
+            specs.add(criterion.isRange()
+                    ? AdAttributeSpecifications.hasAttributeNumberInRange(criterion.key(), criterion.min(), criterion.max())
+                    : AdAttributeSpecifications.hasAttributeValue(criterion.key(), criterion.value()));
+        }
+
+        return specs.stream()
+                .filter(Objects::nonNull)
+                .reduce(Specification::and)
+                .orElseThrow();
     }
 
     private List<Ad> fetchWithOffsetLimit(Specification<Ad> spec, AdSortOption sortOption, String q, long offset, int limit) {

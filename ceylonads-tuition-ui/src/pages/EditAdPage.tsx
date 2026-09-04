@@ -28,17 +28,17 @@ export function EditAdPage() {
         if (cancelled) return;
         const match = ads.find((a) => String(a.id) === id);
         if (!match) {
-          setError("This ad could not be found, or it doesn't belong to your account.");
+          setError("This class could not be found, or it doesn't belong to your account.");
         } else if (!tuitionCategorySlugs.has(match.categorySlug)) {
           // This is the tuition site's edit form (tuition category picker, tuition-only
           // attributes) - an ad from elsewhere in the CeylonAds marketplace can't be edited here.
-          setError("This ad isn't a tuition ad. Edit it from the main CeylonAds site instead.");
+          setError("This isn't a tuition class and can't be edited here.");
         } else {
           setAd(match);
         }
       })
       .catch((err) => {
-        if (!cancelled) setError(getApiErrorMessage(err, "Could not load this ad."));
+        if (!cancelled) setError(getApiErrorMessage(err, "Could not load this class."));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -52,7 +52,7 @@ export function EditAdPage() {
   if (loading) {
     return (
       <div className="container">
-        <LoadingState label="Loading your ad…" />
+        <LoadingState label="Loading your class…" />
       </div>
     );
   }
@@ -60,7 +60,7 @@ export function EditAdPage() {
   if (error || !ad) {
     return (
       <div className="container">
-        <ErrorState title="Ad not found" message={error ?? "This ad is unavailable."} />
+        <ErrorState title="Class not found" message={error ?? "This class is unavailable."} />
         <p style={{ textAlign: "center", marginTop: 16 }}>
           <Link to="/my-ads" className="btn btn-primary">
             Back to My Classes
@@ -90,7 +90,7 @@ export function EditAdPage() {
 
   return (
     <>
-      <Seo title="Edit Your Ad" noindex />
+      <Seo title="Edit Class" noindex />
       <PostAdWizard mode="edit" adId={ad.id} initialValues={initialValues} initialMedia={ad.media} />
     </>
   );

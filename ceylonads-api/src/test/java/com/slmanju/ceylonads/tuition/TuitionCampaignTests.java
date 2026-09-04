@@ -3,6 +3,7 @@ package com.slmanju.ceylonads.tuition;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slmanju.ceylonads.common.config.LocalDataSeeder;
+import com.slmanju.ceylonads.promotion.repository.PromotionCampaignRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -22,11 +24,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 // Covers GET /api/tuition/promotions/campaign: the storefront banner/modal presentation endpoint,
-// resolved by PromotionCampaignService#findActiveCustomerCampaign. Fresh seed data (see
-// V18__tuition_promotion_catalog_v2.sql + V20__promotion_campaign_launch_offer_presentation.sql)
-// leaves both seeded Tuition campaigns customer_visible=true but active=false, so "no active
-// campaign" is the default state each test starts from - every "should return" test explicitly
-// activates its own campaign via the admin API.
+// resolved by PromotionCampaignService#findActiveCustomerCampaign. V27 (ezClass free launch) seeds
+// EZCLASS_LAUNCH_FREE customer_visible=true AND active=true covering "now" - the real live launch
+// offer - so unlike the old (deactivated) EZCLASS_LAUNCH_990/EZCLASS_HALF_PRICE scaffolding this
+// class was originally written against, "no active campaign" is no longer the default state.
+// Every test here is @Transactional and deactivates EZCLASS_LAUNCH_FREE first (rolled back
+// automatically afterwards) to restore the clean baseline these generic campaign-mechanics tests
+// are actually about, then activates its own throwaway campaign via the admin API as before.
 @SpringBootTest
 @ActiveProfiles({"local", "test"})
 @AutoConfigureMockMvc
@@ -38,6 +42,9 @@ class TuitionCampaignTests {
     @Autowired
     private LocalDataSeeder seeder;
 
+    @Autowired
+    private PromotionCampaignRepository promotionCampaignRepository;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
@@ -45,14 +52,29 @@ class TuitionCampaignTests {
         seeder.run();
     }
 
+    // Deactivates the real EZCLASS_LAUNCH_FREE launch campaign (live-by-default since V27) via the
+    // admin API so each test starts from a clean "no active TUITION campaign" slate, exactly as
+    // this class originally assumed. Must be called from a @Transactional test so the deactivation
+    // rolls back afterwards instead of leaking into other test classes sharing this H2 instance.
+    private void deactivateDefaultLaunchCampaign(String adminToken) throws Exception {
+        long id = promotionCampaignRepository.findByCode("EZCLASS_LAUNCH_FREE").orElseThrow().getId();
+        mockMvc.perform(patch("/api/admin/promotion-campaigns/" + id + "/deactivate")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk());
+    }
+
     @Test
+    @Transactional
     void noActiveCampaignReturnsNoContent() throws Exception {
+        deactivateDefaultLaunchCampaign(loginAndGetToken("admin", "admin123"));
         mockMvc.perform(get("/api/tuition/promotions/campaign")).andExpect(status().isNoContent());
     }
 
     @Test
+    @Transactional
     void activeCustomerVisibleTuitionCampaignIsReturnedWithPresentationFields() throws Exception {
         String adminToken = loginAndGetToken("admin", "admin123");
+        deactivateDefaultLaunchCampaign(adminToken);
         long planId = tuitionPlanIdByCode(adminToken, "TUITION_HOME_FEATURED_30D");
         Instant now = Instant.now();
         createCampaign(adminToken, "ACTIVE_" + UUID.randomUUID(), "TUITION", planId,
@@ -70,8 +92,10 @@ class TuitionCampaignTests {
     }
 
     @Test
+    @Transactional
     void showBannerAndShowModalAreReturnedIndependently() throws Exception {
         String adminToken = loginAndGetToken("admin", "admin123");
+        deactivateDefaultLaunchCampaign(adminToken);
         long planId = tuitionPlanIdByCode(adminToken, "TUITION_HOME_FEATURED_30D");
         Instant now = Instant.now();
         createCampaign(adminToken, "BANNER_ONLY_" + UUID.randomUUID(), "TUITION", planId,
@@ -85,8 +109,10 @@ class TuitionCampaignTests {
     }
 
     @Test
+    @Transactional
     void futureCampaignIsNotReturned() throws Exception {
         String adminToken = loginAndGetToken("admin", "admin123");
+        deactivateDefaultLaunchCampaign(adminToken);
         long planId = tuitionPlanIdByCode(adminToken, "TUITION_HOME_FEATURED_30D");
         Instant now = Instant.now();
         createCampaign(adminToken, "FUTURE_" + UUID.randomUUID(), "TUITION", planId,
@@ -97,8 +123,10 @@ class TuitionCampaignTests {
     }
 
     @Test
+    @Transactional
     void expiredCampaignIsNotReturned() throws Exception {
         String adminToken = loginAndGetToken("admin", "admin123");
+        deactivateDefaultLaunchCampaign(adminToken);
         long planId = tuitionPlanIdByCode(adminToken, "TUITION_HOME_FEATURED_30D");
         Instant now = Instant.now();
         createCampaign(adminToken, "EXPIRED_" + UUID.randomUUID(), "TUITION", planId,
@@ -109,8 +137,10 @@ class TuitionCampaignTests {
     }
 
     @Test
+    @Transactional
     void deactivatedCampaignIsNotReturned() throws Exception {
         String adminToken = loginAndGetToken("admin", "admin123");
+        deactivateDefaultLaunchCampaign(adminToken);
         long planId = tuitionPlanIdByCode(adminToken, "TUITION_HOME_FEATURED_30D");
         Instant now = Instant.now();
         long campaignId = createCampaign(adminToken, "INACTIVE_" + UUID.randomUUID(), "TUITION", planId,
@@ -125,8 +155,10 @@ class TuitionCampaignTests {
     }
 
     @Test
+    @Transactional
     void notCustomerVisibleCampaignIsNotReturned() throws Exception {
         String adminToken = loginAndGetToken("admin", "admin123");
+        deactivateDefaultLaunchCampaign(adminToken);
         long planId = tuitionPlanIdByCode(adminToken, "TUITION_HOME_FEATURED_30D");
         Instant now = Instant.now();
         createCampaign(adminToken, "NOT_VISIBLE_" + UUID.randomUUID(), "TUITION", planId,
@@ -137,8 +169,10 @@ class TuitionCampaignTests {
     }
 
     @Test
+    @Transactional
     void mainSiteCampaignIsNotReturnedFromTuitionEndpoint() throws Exception {
         String adminToken = loginAndGetToken("admin", "admin123");
+        deactivateDefaultLaunchCampaign(adminToken);
         long planId = genericPlanIdByCode(adminToken, "VEHICLES_FEATURED_7D");
         Instant now = Instant.now();
         createCampaign(adminToken, "MAIN_SITE_" + UUID.randomUUID(), "MAIN_SITE", planId,
@@ -149,8 +183,10 @@ class TuitionCampaignTests {
     }
 
     @Test
+    @Transactional
     void overlappingActiveCustomerVisibleCampaignsAreRejectedAtCreation() throws Exception {
         String adminToken = loginAndGetToken("admin", "admin123");
+        deactivateDefaultLaunchCampaign(adminToken);
         long planId = tuitionPlanIdByCode(adminToken, "TUITION_HOME_FEATURED_30D");
         Instant now = Instant.now();
         createCampaign(adminToken, "FIRST_" + UUID.randomUUID(), "TUITION", planId,

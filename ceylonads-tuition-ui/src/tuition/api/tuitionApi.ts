@@ -75,7 +75,9 @@ class HttpTuitionRepository implements TuitionRepository {
 // /api/tuition/classes/search. Deliberately NOT the generic searchAds()/`/api/ads` - that endpoint
 // is scoped server-side to SourceChannel.MAIN_SITE only and never returns Tuition listings, no
 // matter what category/attribute filters are passed. Same params/response shape as searchAds so
-// callers migrating off it don't need to change anything else.
+// callers migrating off it don't need to change anything else. A matching ad with an active Search
+// Boost (TUITION_SEARCH_BOOST) promotion is ranked first among these same results server-side and
+// comes back with `promoted: true` - there is no separate boosted-results endpoint/fetch.
 export async function searchTuitionClasses(params: AdSearchParams = {}): Promise<PageResponse<AdResponse>> {
   const { attributeFilters, ...rest } = params;
   const { data } = await apiClient.get<PageResponse<AdResponse>>("/api/tuition/classes/search", {

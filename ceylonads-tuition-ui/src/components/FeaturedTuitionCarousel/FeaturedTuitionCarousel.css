@@ -109,21 +109,11 @@
 .featured-tuition-carousel__track {
   display: flex;
   gap: 16px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
   max-width: 100%;
-}
-
-.featured-tuition-carousel__track::-webkit-scrollbar {
-  display: none;
 }
 
 .featured-tuition-carousel__item {
   flex: 0 0 82%;
-  scroll-snap-align: start;
   min-width: 0;
 }
 
@@ -151,39 +141,6 @@
   .featured-tuition-carousel__item {
     flex-basis: calc((100% - 3 * 20px) / 4);
   }
-}
-
-.featured-tuition-carousel__dots {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-}
-
-.featured-tuition-carousel__dot {
-  width: 9px;
-  height: 9px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-pill);
-  background: var(--color-border);
-  cursor: pointer;
-  transition: background 0.15s ease, transform 0.15s ease;
-}
-
-.featured-tuition-carousel__dot:hover {
-  background: var(--color-accent-light);
-}
-
-.featured-tuition-carousel__dot[data-active="true"] {
-  background: var(--color-primary);
-  transform: scale(1.2);
-}
-
-.featured-tuition-carousel__position {
-  text-align: center;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
 }
 
 /* Compact chrome for page-level promo carousels (e.g. the Tuition search page's fixed top

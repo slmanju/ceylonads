@@ -206,6 +206,14 @@ public class PromotionSlotService {
         return slots.findByPlacementTypeAndCategoryIsNull(placementType).stream().findFirst();
     }
 
+    // Resolves a slot by its unique code, for callers ranking/reading a specific, exact placement
+    // (e.g. Tuition's TUITION_SEARCH_BOOST) rather than the single well-known slot for a placement
+    // type.
+    @Transactional(readOnly = true)
+    public Optional<PromotionSlot> resolveSlotByCode(String code) {
+        return slots.findByCode(code);
+    }
+
     private Category resolveCategory(PlacementType placementType, String categorySlug) {
         boolean categoryScoped = placementType.isCategoryScoped();
         boolean hasCategory = categorySlug != null && !categorySlug.isBlank();

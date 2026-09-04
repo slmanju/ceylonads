@@ -10,6 +10,7 @@ import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Collection;
 
 public final class AdSpecifications {
@@ -19,6 +20,13 @@ public final class AdSpecifications {
 
     public static Specification<Ad> active() {
         return (root, query, cb) -> cb.equal(root.get("status"), AdStatus.ACTIVE);
+    }
+
+    // TUITION's public-visibility deadline: an ad is publicly visible only while expiresAt is
+    // null (MAIN_SITE/BOARDING - never expires) or still in the future. Applied unconditionally
+    // in AdSearchService alongside active() so it's a no-op for every non-TUITION ad.
+    public static Specification<Ad> notExpired(Instant now) {
+        return (root, query, cb) -> cb.or(cb.isNull(root.get("expiresAt")), cb.greaterThan(root.get("expiresAt"), now));
     }
 
     // MAIN public marketplace boundary: only used by AdSearchService, never by admin/moderation/
@@ -66,5 +74,13 @@ public final class AdSpecifications {
     public static Specification<Ad> excludingIds(Collection<Long> ids) {
         if (ids == null || ids.isEmpty()) return null;
         return (root, query, cb) -> cb.not(root.get("id").in(ids));
+    }
+
+    // Used to narrow an already-small candidate pool (e.g. ads with an active promotion in a
+    // specific slot) down to just the ones also satisfying an unrelated search Specification,
+    // without re-deriving that pool's own membership check.
+    public static Specification<Ad> idIn(Collection<Long> ids) {
+        if (ids == null || ids.isEmpty()) return null;
+        return (root, query, cb) -> root.get("id").in(ids);
     }
 }

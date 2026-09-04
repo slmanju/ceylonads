@@ -5,8 +5,6 @@ import { HomePage } from "./pages/HomePage";
 import { ClassesPage } from "./pages/ClassesPage";
 import { ClassDetailPage } from "./pages/ClassDetailPage";
 import { OnlineClassesPage } from "./pages/OnlineClassesPage";
-import { TutorsPage } from "./pages/TutorsPage";
-import { DistrictsPage } from "./pages/DistrictsPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { PostAdPage } from "./pages/PostAdPage";
@@ -25,8 +23,6 @@ function App() {
         <Route path="/classes" element={<ClassesPage />} />
         <Route path="/classes/:slug" element={<ClassDetailPage />} />
         <Route path="/online-classes" element={<OnlineClassesPage />} />
-        <Route path="/tutors" element={<TutorsPage />} />
-        <Route path="/districts" element={<DistrictsPage />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />

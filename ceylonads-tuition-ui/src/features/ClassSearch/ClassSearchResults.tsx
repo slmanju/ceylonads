@@ -14,9 +14,9 @@ import { Pagination } from "../../components/Pagination/Pagination";
 import type { AdResponse, SortOption } from "../../types/api";
 import { tuitionRepository, searchTuitionClasses } from "../../tuition/api/tuitionApi";
 import { useFeaturedTuition } from "../../hooks/useFeaturedTuition";
-import { SearchBoostSection } from "../../components/SearchBoostSection/SearchBoostSection";
 import { featuredCardToPromotion } from "../../tuition/promotion/api/tuitionPromotionApi";
-import { PromotionHomeRail } from "../../components/Promotion/PromotionHomeRail";
+import { SearchSpotlightRail } from "../../components/Promotion/SearchSpotlightRail";
+import { SearchSpotlightInline } from "../../components/Promotion/SearchSpotlightInline";
 import { emptyClassFilterValues, type ClassFilterValues } from "../../tuition/model/searchFilters";
 import { matchesTuitionCriteria, type TuitionDetails, type TuitionSearchCriteria } from "../../tuition/model/tuition";
 import { getApiErrorMessage } from "../../utils/apiError";
@@ -27,30 +27,26 @@ import "./ClassSearchResults.css";
 // passed explicitly so the page size never silently drifts if that default ever changes.
 const PAGE_SIZE = 9;
 
-// Tuition's "Search Boost" product (TUITION_SEARCH_BOOST) - promoted listings inside the search
-// experience, fetched separately via GET /api/tuition/featured?slot=TUITION_SEARCH_BOOST and
-// rendered as its own additive strip above the organic grid (see SearchBoostSection). Deliberately
-// NOT mixed into the organic `search` call above: TuitionClassService.search always returns
-// exactly PAGE_SIZE (9) purely organic results (see AdSearchService#search's applyPromotionBoost
-// flag) so Search Boost can never reduce the 9-per-page organic count or skew
-// totalElements/totalPages. Unlike TUITION_SEARCH_TOP's fixed page-advertising carousel, Search
-// Boost shows real promoted listings only - capped at 3 (SearchBoostSection's desktop maximum),
-// never backfilled with placeholder cards, and hidden entirely when nothing is active.
-const SEARCH_BOOST_SLOT = "TUITION_SEARCH_BOOST";
-const SEARCH_BOOST_MAX_CARDS = 3;
+// Tuition's "Search Boost" product (TUITION_SEARCH_BOOST) is a RANKING enhancement, not a separate
+// placement: the backend (TuitionClassService.search / AdSearchService's slot-code overload) ranks
+// a matching ad with a currently active Search Boost promotion first among these same organic
+// results - never additive to PAGE_SIZE, never a separate fetch/section here. Each returned ad
+// simply carries `promoted: true`, and ClassCard renders its normal PROMOTED badge (BoostedBadge)
+// for it, exactly like any other card in this grid.
 
 // Search Page Spotlight - the search page's fixed right-rail placement, a real,
-// independently-purchasable slot (capacity 1) reusing the stable TUITION_SEARCH_SIDEBAR_TOP code
-// from before the six-product catalog cleanup, restored under its current name/price by
-// ceylonads-api's V22 migration. Same useFeaturedTuition(1, {slot}) + featuredCardToPromotion +
-// PromotionHomeRail (PromotionSideCard / PromotionSelfAd "Advertise Here" fallback) pattern as
-// Homepage Spotlight (TUITION_HOME_LATEST_RIGHT) and Detail Spotlight (TUITION_DETAIL_RIGHT) -
-// never mixed with Search Top or Search Boost, which read entirely different slots and render via
-// entirely different components (FeaturedTuitionCarousel / SearchBoostSection).
+// independently-purchasable slot reusing the stable TUITION_SEARCH_SIDEBAR_TOP code from before
+// the six-product catalog cleanup, restored under its current name/price by ceylonads-api's V22
+// migration. V25 raised its capacity from 1 to 12 concurrent advertisers, 4 of which are visible
+// at once - see SearchSpotlightRail (desktop vertical carousel) and SearchSpotlightInline
+// (mobile/tablet horizontal carousel), both fed by this same up-to-12-card fetch. Never mixed with
+// Search Top (a separate advertising carousel, rendered above the filters in ClassesPage.tsx) or
+// Search Boost (a ranking flag on the organic results above, not a placement of its own).
 const SEARCH_SPOTLIGHT_SLOT = "TUITION_SEARCH_SIDEBAR_TOP";
-// Where the mobile/tablet inline card lands among the organic cards - after the first row's worth
-// (see ClassGrid's insertAfter). Desktop shows the same promotion in the right rail instead (see
-// the >=1080px breakpoint in ClassSearchResults.css) - the two are mutually exclusive per
+const SEARCH_SPOTLIGHT_CAPACITY = 12;
+// Where the mobile/tablet inline carousel lands among the organic cards - after the first row's
+// worth (see ClassGrid's insertAfter). Desktop shows the same promotions in the right rail instead
+// (see the >=1080px breakpoint in ClassSearchResults.css) - the two are mutually exclusive per
 // breakpoint, never both visible at once.
 const SEARCH_SPOTLIGHT_INLINE_INSERT_INDEX = 3;
 
@@ -150,14 +146,12 @@ export function ClassSearchResults({
   const effectiveCategory = fixedCategorySlug || activeFilters.category || tuitionRoot?.slug || "";
   const effectiveLocation = fixedLocationSlug || activeFilters.location;
 
-  const { featured: boostedClasses, loading: boostedLoading } = useFeaturedTuition(SEARCH_BOOST_MAX_CARDS, {
-    slot: SEARCH_BOOST_SLOT,
+  const { featured: spotlightFeatured, loading: spotlightLoading } = useFeaturedTuition(SEARCH_SPOTLIGHT_CAPACITY, {
+    slot: SEARCH_SPOTLIGHT_SLOT,
   });
-
-  const { featured: spotlightFeatured } = useFeaturedTuition(1, { slot: SEARCH_SPOTLIGHT_SLOT });
-  const spotlightPromotion = spotlightFeatured[0]
-    ? featuredCardToPromotion(spotlightFeatured[0], "TUITION_SEARCH_SIDEBAR_TOP", "PROMOTED")
-    : undefined;
+  const spotlightPromotions = spotlightFeatured.map((card) =>
+    featuredCardToPromotion(card, "TUITION_SEARCH_SIDEBAR_TOP", "PROMOTED"),
+  );
 
   const prevAppliedRef = useRef(activeFilters);
   useEffect(() => {
@@ -188,24 +182,25 @@ export function ClassSearchResults({
       }
     }
 
-    searchTuitionClasses({
+    const criteria = {
       q: activeFilters.q || undefined,
       category: effectiveCategory,
       location: effectiveLocation || undefined,
       minPrice: activeFilters.minPrice ? Number(activeFilters.minPrice) : undefined,
       maxPrice: activeFilters.maxPrice ? Number(activeFilters.maxPrice) : undefined,
-      page,
-      size: PAGE_SIZE,
-      sort,
       attributeFilters,
-    })
+    };
+
+    searchTuitionClasses({ ...criteria, page, size: PAGE_SIZE, sort })
       .then(async (data) => {
         if (cancelled) return;
         const map = await tuitionRepository.getDetailsMap(data.content, locations);
         if (cancelled) return;
 
         // Class Format/Class Purpose are mock-provider-only and applied client-side to this one
-        // results page - see "Recommended flow" in the tuition enhancement spec.
+        // results page - see "Recommended flow" in the tuition enhancement spec. Search Boost
+        // ranking already happened server-side (see the const comment above), so `data.content` is
+        // rendered as-is, in the order the backend returned it - never reordered or filtered here.
         const tuitionCriteria = toTuitionCriteria(activeFilters);
         const filtered = data.content.filter((ad) => {
           const details = map.get(ad.id);
@@ -424,8 +419,6 @@ export function ClassSearchResults({
 
       <div className="class-search-results__body">
         <div className="class-search-results__main">
-          <SearchBoostSection items={boostedClasses} loading={boostedLoading} />
-
           <ClassGrid
             ads={ads}
             detailsById={detailsById}
@@ -435,7 +428,7 @@ export function ClassSearchResults({
             emptyMessage={emptyMessage}
             insertAfter={{
               index: SEARCH_SPOTLIGHT_INLINE_INSERT_INDEX,
-              node: <PromotionHomeRail promotion={spotlightPromotion} />,
+              node: <SearchSpotlightInline promotions={spotlightFeatured} loading={spotlightLoading} />,
             }}
           />
 
@@ -443,7 +436,7 @@ export function ClassSearchResults({
         </div>
 
         <div className="class-search-results__spotlight-rail">
-          <PromotionHomeRail promotion={spotlightPromotion} />
+          <SearchSpotlightRail promotions={spotlightPromotions} loading={spotlightLoading} />
         </div>
       </div>
 

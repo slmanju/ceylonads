@@ -3,6 +3,7 @@ package com.slmanju.ceylonads.tuition;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slmanju.ceylonads.common.config.LocalDataSeeder;
+import com.slmanju.ceylonads.promotion.repository.PromotionCampaignRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,11 +45,22 @@ class TuitionFeaturedTests {
     @Autowired
     private LocalDataSeeder seeder;
 
+    @Autowired
+    private PromotionCampaignRepository promotionCampaignRepository;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void seed() throws Exception {
         seeder.run();
+    }
+
+    private void deactivateLaunchCampaign() throws Exception {
+        long id = promotionCampaignRepository.findByCode("EZCLASS_LAUNCH_FREE").orElseThrow().getId();
+        String adminToken = loginAndGetToken("admin", "admin123");
+        mockMvc.perform(patch("/api/admin/promotion-campaigns/" + id + "/deactivate")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -67,8 +79,13 @@ class TuitionFeaturedTests {
     }
 
     @Test
+    @Transactional
     void featuredExcludesPendingPromotions() throws Exception {
         String kamalToken = loginAndGetToken("kamal", "customer123");
+        // Every Tuition plan is currently free under the real EZCLASS_LAUNCH_FREE launch campaign
+        // (live by default since V27), which would auto-activate on creation - deactivate it so
+        // this plan is paid again and genuinely lands PENDING_PAYMENT, matching this test's purpose.
+        deactivateLaunchCampaign();
         long adId = createApprovedAd(kamalToken, "Featured Tuition Pending " + UUID.randomUUID(), "education-tuition");
         long planId = planIdByCode(kamalToken, "TUITION_HOME_FEATURED_30D");
 
@@ -171,6 +188,10 @@ class TuitionFeaturedTests {
         assertFalse(card.has("attributes"));
     }
 
+    // A plan currently covered by an active free campaign (e.g. EZCLASS_LAUNCH_FREE on
+    // TUITION_HOME_FEATURED_30D - see V27) auto-activates on creation, so the admin activation step
+    // is skipped when the promotion is already ACTIVE rather than assuming every plan still requires
+    // payment.
     private long promoteAndActivate(String customerToken, String adminToken, long adId, String planCode) throws Exception {
         long planId = planIdByCode(customerToken, planCode);
         String createResponse = mockMvc.perform(post("/api/promotions")
@@ -179,11 +200,14 @@ class TuitionFeaturedTests {
                         .content(objectMapper.writeValueAsString(Map.of("adId", adId, "promotionPlanId", planId))))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        long promotionId = objectMapper.readTree(createResponse).get("id").asLong();
+        JsonNode created = objectMapper.readTree(createResponse);
+        long promotionId = created.get("id").asLong();
 
-        mockMvc.perform(patch("/api/admin/promotions/" + promotionId + "/activate")
-                        .header("Authorization", "Bearer " + adminToken))
-                .andExpect(status().isOk());
+        if (!"ACTIVE".equals(created.get("status").asText())) {
+            mockMvc.perform(patch("/api/admin/promotions/" + promotionId + "/activate")
+                            .header("Authorization", "Bearer " + adminToken))
+                    .andExpect(status().isOk());
+        }
         return promotionId;
     }
 

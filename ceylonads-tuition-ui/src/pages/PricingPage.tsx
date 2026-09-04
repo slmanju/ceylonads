@@ -8,7 +8,7 @@ import { LoadingState } from "../components/LoadingState/LoadingState";
 import { ErrorState } from "../components/ErrorState/ErrorState";
 import { Seo } from "../components/Seo/Seo";
 import type { CompatiblePromotionPlanResponse } from "../types/api";
-import { formatPrice } from "../utils/formatPrice";
+import { formatPrice, formatPromotionPrice } from "../utils/formatPrice";
 import { formatFullDate } from "../utils/formatDate";
 import "./PricingPage.css";
 
@@ -43,7 +43,7 @@ export function PricingPage() {
     <div className="pricing-page container">
       <Seo
         title="Promotion Pricing"
-        description="Promotion pricing for ezClass Tuition ads - see normal prices and any active campaign offers."
+        description="Promotion pricing for ezClass tuition classes - see normal prices and any active campaign offers."
       />
 
       <div className="pricing-page__header">
@@ -100,7 +100,7 @@ export function PricingPage() {
                         <span className="pricing-card__offer-badge">{plan.campaignName}</span>
                       )}
                       <p className="pricing-card__price pricing-card__price--current">
-                        {formatPrice(plan.currentPrice)}
+                        {formatPromotionPrice(plan.currentPrice)}
                       </p>
                       <p className="pricing-card__savings">Save {formatPrice(plan.discountAmount)}</p>
                     </>

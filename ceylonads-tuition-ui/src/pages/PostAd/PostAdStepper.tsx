@@ -10,7 +10,7 @@ interface PostAdStepperProps {
 
 export function PostAdStepper({ currentIndex, maxReachedIndex, onStepClick }: PostAdStepperProps) {
   return (
-    <ol className="post-ad-stepper" aria-label="Post tuition ad steps">
+    <ol className="post-ad-stepper" aria-label="Post class steps">
       {STEPS.map((step, index) => {
         const isDone = index < currentIndex;
         const isCurrent = index === currentIndex;

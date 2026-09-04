@@ -15,7 +15,7 @@ import { listTuitionPromotionPlans } from "../api/promotionApi";
 import { featuredCardToPromotion } from "../tuition/promotion/api/tuitionPromotionApi";
 import { PromotionBanner } from "../components/Promotion/PromotionBanner";
 import { PromotionBannerSelfAd } from "../components/Promotion/PromotionBannerSelfAd";
-import { PromotionHomeRail } from "../components/Promotion/PromotionHomeRail";
+import { HomeSpotlightRail } from "../components/Promotion/HomeSpotlightRail";
 import { FeaturedTuitionCarousel } from "../components/FeaturedTuitionCarousel/FeaturedTuitionCarousel";
 import "./HomePage.css";
 
@@ -28,30 +28,50 @@ const HOMEPAGE_PAGE_SIZE = 9;
 const SHOW_PROMO_BANNER = false;
 
 // The Featured Classes row reuses the shared CeylonAds CATEGORY_FEATURED promotion slot bound to
-// the Education & Tuition category (TUITION_FEATURED in LocalDataSeeder: capacity 12, visibleCount
-// 4 today) - the same slot /api/tuition/featured reads. `slotCapacity` is the *total* number of
-// Featured slots to backfill with placeholders (spread across carousel pages); how many of those
-// show at once per page is a per-breakpoint layout concern the carousel measures itself (see
-// FeaturedTuitionCarousel's ResizeObserver), not something fetched here. Falls back to this
-// default when GET /api/tuition/promotions/plans is unreachable or that slot isn't seeded, so the
-// row still renders a sensible number of cards.
+// the Education & Tuition category (TUITION_FEATURED in LocalDataSeeder) - the same slot
+// /api/tuition/featured reads. `featuredSlotCount` only bounds how many *real* promotions to fetch
+// (plan's slotCapacity, e.g. 12) - it is not a placeholder-backfill target. FeaturedTuitionCarousel
+// fills its own first visible viewport from what it measures itself (see its ResizeObserver), and
+// never pads beyond that just because the plan has more sellable capacity (see root CLAUDE.md's
+// promotion placeholder spec). Falls back to this default when GET /api/tuition/promotions/plans
+// is unreachable or that slot isn't seeded, so the fetch still requests a sensible number of cards.
 const DEFAULT_FEATURED_SLOT_COUNT = 12;
 const TUITION_FEATURED_CATEGORY_SLUG = "education-tuition";
 
 // Homepage Spotlight, beside Latest Classes - its own real, independently-purchasable slot
-// (capacity 8 in promotion master data), distinct from TUITION_FEATURED above. Requested as a
-// single card (size=1), not a carousel - see PromotionHomeRail.
+// (TUITION_HOME_LATEST_RIGHT, capacity 8 / visible_count 4 in promotion master data), distinct
+// from TUITION_FEATURED above - two separate paid products. A right-rail vertical carousel (see
+// HomeSpotlightRail), not a single fixed card. `HOME_SPOTLIGHT_CAPACITY` only bounds how many real
+// promotions to fetch, mirroring Search Page Spotlight's SEARCH_SPOTLIGHT_CAPACITY - the rail fills
+// its own first visible viewport from what it measures, never padded beyond that just because the
+// slot has more sellable capacity (see root CLAUDE.md's promotion placeholder spec).
 const HOME_LATEST_RIGHT_SLOT = "TUITION_HOME_LATEST_RIGHT";
+const HOME_SPOTLIGHT_CAPACITY = 12;
 
 // Each quick link maps to a real ClassFilterValues param (see tuition/model/searchFilters.ts)
 // so the destination /classes URL lands with the matching filter already selected in the
 // filter bar and active-filter chips, not just a free-text q= search.
-const HERO_QUICK_SEARCHES: { label: string; param: "level" | "curriculum" | "medium" | "deliveryMode"; value: string }[] = [
+const HERO_QUICK_SEARCHES: {
+  label: string;
+  param: "level" | "curriculum" | "medium" | "deliveryMode" | "subject";
+  value: string;
+}[] = [
   { label: "A/L", param: "level", value: "AL" },
   { label: "O/L", param: "level", value: "OL" },
   { label: "Cambridge", param: "curriculum", value: "CAMBRIDGE" },
   { label: "English", param: "medium", value: "ENGLISH" },
   { label: "Online", param: "deliveryMode", value: "ONLINE" },
+];
+
+// Real crawlable links into the SEO-worthy subject/delivery landing pages (see
+// src/utils/searchSeo.ts) - distinct from HERO_QUICK_SEARCHES above (existing generic
+// level/curriculum/medium shortcuts), so Google can discover these /classes?... URLs from the
+// homepage without depending solely on the sitemap.
+const SEO_QUICK_LINKS: { label: string; param: "subject" | "deliveryMode"; value: string }[] = [
+  { label: "English Classes", param: "subject", value: "ENGLISH" },
+  { label: "Maths Classes", param: "subject", value: "MATHEMATICS" },
+  { label: "Chess Classes", param: "subject", value: "CHESS" },
+  { label: "Home Visit Classes", param: "deliveryMode", value: "HOME_VISIT" },
 ];
 
 export function HomePage() {
@@ -67,10 +87,12 @@ export function HomePage() {
 
   const { topBanner: promoBanner } = useHomepagePromotions();
 
-  const { featured: homeSpotlightFeatured } = useFeaturedTuition(1, { slot: HOME_LATEST_RIGHT_SLOT });
-  const homeSpotlightPromotion = homeSpotlightFeatured[0]
-    ? featuredCardToPromotion(homeSpotlightFeatured[0], "TUITION_HOME_LATEST_RIGHT")
-    : undefined;
+  const { featured: homeSpotlightFeatured, loading: homeSpotlightLoading } = useFeaturedTuition(HOME_SPOTLIGHT_CAPACITY, {
+    slot: HOME_LATEST_RIGHT_SLOT,
+  });
+  const homeSpotlightPromotions = homeSpotlightFeatured.map((card) =>
+    featuredCardToPromotion(card, "TUITION_HOME_LATEST_RIGHT"),
+  );
 
   const [featuredSlotCount, setFeaturedSlotCount] = useState(DEFAULT_FEATURED_SLOT_COUNT);
   useEffect(() => {
@@ -92,13 +114,12 @@ export function HomePage() {
   }, []);
 
   const { featured: featuredTuition, loading: featuredTuitionLoading } = useFeaturedTuition(featuredSlotCount);
-  const featuredPlaceholderCount = featuredTuitionLoading ? 0 : Math.max(0, featuredSlotCount - featuredTuition.length);
 
   return (
     <div className="tuition-home">
       <Seo
-        title="ezClass — Find Classes & Tutors in Sri Lanka"
-        description="Search tuition classes, tutors and online courses across Sri Lanka by subject, grade, medium and district."
+        title="Tuition Classes, Tutors & Panthi in Sri Lanka"
+        description="Find tuition classes, tutors and panthi across Sri Lanka. Search online, physical and home-visit classes for English, maths, science, chess and more."
       />
 
       <section className="tuition-hero">
@@ -146,11 +167,26 @@ export function HomePage() {
       )}
 
       <section className="container tuition-home__section">
+        <div className="tuition-home__section-header">
+          <h2>Browse by Subject</h2>
+        </div>
+        <ul className="tuition-hero__quick-links">
+          {SEO_QUICK_LINKS.map(({ label, param, value }) => (
+            <li key={label}>
+              <Link to={`/classes?${param}=${encodeURIComponent(value)}`} className="tuition-hero__quick-link">
+                {label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="container tuition-home__section">
         <FeaturedTuitionCarousel
           title="Featured Classes"
           items={featuredTuition}
           loading={featuredTuitionLoading}
-          placeholderCount={featuredPlaceholderCount}
+          placeholderKeyPrefix="home-featured-placeholder"
         />
       </section>
 
@@ -178,7 +214,7 @@ export function HomePage() {
             <Pagination page={page} totalPages={latestTotalPages} onPageChange={setPage} />
           </div>
           <div className="tuition-home__latest-side">
-            <PromotionHomeRail promotion={homeSpotlightPromotion} />
+            <HomeSpotlightRail promotions={homeSpotlightPromotions} loading={homeSpotlightLoading} />
           </div>
         </div>
       </section>

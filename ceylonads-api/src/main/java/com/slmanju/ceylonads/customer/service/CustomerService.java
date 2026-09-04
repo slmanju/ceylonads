@@ -33,6 +33,14 @@ public class CustomerService {
         return customers.findById(id).orElseThrow(() -> new NotFoundException("Customer not found"));
     }
 
+    // Takes a DB row lock on this customer for the rest of the caller's transaction (see
+    // CustomerRepository.lockById) - joins the caller's existing transaction rather than starting
+    // its own, so the lock is held until that transaction commits.
+    @Transactional
+    public void lockForUpdate(Long id) {
+        customers.lockById(id).orElseThrow(() -> new NotFoundException("Customer not found"));
+    }
+
     @Transactional(readOnly = true)
     public CustomerResponse me(String username) {
         return customerMapper.toResponse(requireByUsername(username));

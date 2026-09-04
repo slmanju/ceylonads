@@ -4,7 +4,7 @@ import { Seo } from "../components/Seo/Seo";
 export function PostAdPage() {
   return (
     <>
-      <Seo title="Post a Tuition Ad" noindex />
+      <Seo title="Post a Class" noindex />
       <PostAdWizard mode="create" />
     </>
   );

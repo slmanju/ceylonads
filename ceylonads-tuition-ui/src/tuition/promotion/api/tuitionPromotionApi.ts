@@ -44,14 +44,15 @@ function firstOrUndefined(list: TuitionPromotionResponse[]): TuitionPromotion | 
 }
 
 // Adapts a real TuitionFeaturedCardResponse (GET /api/tuition/featured?slot=...) into the same
-// TuitionPromotion shape PromotionSideCard already renders, so the Homepage Spotlight
-// (TUITION_HOME_LATEST_RIGHT), Detail Right (TUITION_DETAIL_RIGHT), and Search Page Spotlight
-// (TUITION_SEARCH_SIDEBAR_TOP) placements - real, single-card backend slots, unlike the multi-card
-// carousels Home Featured/Search Top/Detail Top use - can reuse that presentation without a
-// parallel card component. `placementType` is carried through for completeness only; no renderer
-// reads it (see model/promotion.ts). `label` defaults to "FEATURED" (Homepage/Detail Spotlight);
-// Search Page Spotlight passes "PROMOTED" instead, to read consistently with the rest of the
-// search page's paid inventory.
+// TuitionPromotion shape PromotionSideCard/SpotlightPosterTile render, so the Homepage Spotlight
+// (TUITION_HOME_LATEST_RIGHT, a 4-visible vertical carousel - see HomeSpotlightRail), Detail Right
+// (TUITION_DETAIL_RIGHT, single-card), and Search Page Spotlight (TUITION_SEARCH_SIDEBAR_TOP, a
+// 12-advertiser slot - see SearchSpotlightRail) placements can reuse the same card presentation
+// without a parallel component per placement. `placementType` is carried through for completeness
+// only; no renderer reads it (see model/promotion.ts). `label` defaults to "FEATURED"
+// (Homepage/Detail Spotlight); Search Page Spotlight passes "PROMOTED" instead, to read
+// consistently with the rest of the search page's paid inventory - though SpotlightPosterTile
+// itself never renders the label at all, only PromotionSideCard does.
 export function featuredCardToPromotion(
   card: TuitionFeaturedCardResponse,
   placementType: Extract<TuitionPromotionPlacement, "TUITION_HOME_LATEST_RIGHT" | "TUITION_DETAIL_RIGHT" | "TUITION_SEARCH_SIDEBAR_TOP">,
@@ -69,6 +70,7 @@ export function featuredCardToPromotion(
     imageUrl: card.primaryImageUrl ?? undefined,
     target: { type: "AD", adSlug: card.slug },
     ctaLabel: "View Class",
+    price: card.price ?? undefined,
     displayOrder: 0,
   };
 }
@@ -77,9 +79,11 @@ export function featuredCardToPromotion(
 // promotion backend. getSearchPromotions below has a real endpoint (GET /api/tuition/promotions)
 // and is wired up unconditionally further down; the other methods have no backend yet.
 class HttpTuitionPromotionRepository implements TuitionPromotionRepository {
-  // No backend endpoint exists yet for homepage placements. Returning empty (rather than mock
-  // data or throwing) so the homepage always renders its Advertise Here fallback (see
-  // PromotionHomeRail/PromotionSelfAd) until a real endpoint is wired up here.
+  // No backend endpoint exists yet for the homepage's mock-only placements (topBanner etc).
+  // Returning empty (rather than mock data or throwing) so the homepage's top banner always
+  // renders its PromotionBannerSelfAd fallback until a real endpoint is wired up here. Homepage
+  // Spotlight (TUITION_HOME_LATEST_RIGHT) is unrelated - it's a real slot fetched separately via
+  // useFeaturedTuition, not through this method.
   async getHomepagePromotions(): Promise<HomepagePromotions> {
     return { featured: [] };
   }

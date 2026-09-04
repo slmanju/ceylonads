@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /login
+Disallow: /register
+Disallow: /post-ad
+Disallow: /my-ads
+Disallow: /account
+
+Sitemap: https://ezclass.lk/sitemap.xml

@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -298,6 +299,13 @@ public class AdService {
         Ad ad = requireAny(id, restrictToChannel);
         ad.deactivate();
         return toSingleResponse(ad, false);
+    }
+
+    // TuitionExpiryScheduler's hourly sweep: flips stale ACTIVE ads in the given channel past
+    // their expiresAt to EXPIRED, via a bulk update - see AdRepository.expireOverdue.
+    @Transactional
+    public int expireOverdue(SourceChannel channel) {
+        return ads.expireOverdue(channel, Instant.now());
     }
 
     private Ad requireAny(Long id, SourceChannel restrictToChannel) {

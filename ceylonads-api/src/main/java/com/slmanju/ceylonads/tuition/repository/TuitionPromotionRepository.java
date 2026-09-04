@@ -7,7 +7,9 @@ import com.slmanju.ceylonads.promotion.entity.PromotionSlot;
 import com.slmanju.ceylonads.promotion.entity.PromotionStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.util.Collection;
@@ -19,22 +21,30 @@ import java.util.List;
 // writes stay exclusively in the `promotion` domain's own PromotionRepository/PromotionService.
 public interface TuitionPromotionRepository extends Repository<Promotion, Long> {
 
-    // Active, currently-live promotions in the given slot whose ad is still ACTIVE and TUITION - a
-    // promotion can outlive its ad going inactive/sold without being cancelled, and the featured
-    // carousel must never surface those; the sourceChannel check is what actually guarantees a
-    // MAIN_SITE/BOARDING ad can never surface here just because it happens to hold a promotion in
-    // a category-bound slot the Tuition UI reads (the slot's own category binding is a promotion-
-    // config concern, not an ad filter). Capped via Pageable so this fixed-size carousel never
-    // needs a COUNT query.
+    // Active, currently-live promotions in the given slot whose ad is still ACTIVE, unexpired, and
+    // TUITION - a promotion can outlive its ad going inactive/sold/expired without being
+    // cancelled, and the featured carousel must never surface those; the sourceChannel check is
+    // what actually guarantees a MAIN_SITE/BOARDING ad can never surface here just because it
+    // happens to hold a promotion in a category-bound slot the Tuition UI reads (the slot's own
+    // category binding is a promotion-config concern, not an ad filter). Capped via Pageable so
+    // this fixed-size carousel never needs a COUNT query.
     @EntityGraph(attributePaths = {"ad", "ad.category", "ad.seller"})
+    @Query("select p from Promotion p where p.status = :status and p.plan.slot = :slot and p.ad.status = :adStatus "
+            + "and p.ad.sourceChannel = :sourceChannel and p.endsAt > :now "
+            + "and (p.ad.expiresAt is null or p.ad.expiresAt > :now) order by p.startsAt desc, p.id asc")
     List<Promotion> findByStatusAndPlan_SlotAndAd_StatusAndAd_SourceChannelAndEndsAtAfterOrderByStartsAtDescIdAsc(
-            PromotionStatus status, PromotionSlot slot, AdStatus adStatus, SourceChannel sourceChannel, Instant now, Pageable pageable);
+            @Param("status") PromotionStatus status, @Param("slot") PromotionSlot slot, @Param("adStatus") AdStatus adStatus,
+            @Param("sourceChannel") SourceChannel sourceChannel, @Param("now") Instant now, Pageable pageable);
 
     // Same eligibility rules as above, but across several slots in one query - used by the search
     // page's sidebar (top/middle/bottom are 3 distinct slots) so it never issues one query per
     // slot. Each slot's own capacity/visibleCount already bounds how many rows can ever be ACTIVE
     // for it at once, so no Pageable/COUNT is needed here.
     @EntityGraph(attributePaths = {"ad", "ad.category", "ad.seller"})
+    @Query("select p from Promotion p where p.status = :status and p.plan.slot in :slots and p.ad.status = :adStatus "
+            + "and p.ad.sourceChannel = :sourceChannel and p.endsAt > :now "
+            + "and (p.ad.expiresAt is null or p.ad.expiresAt > :now) order by p.startsAt desc, p.id asc")
     List<Promotion> findByStatusAndPlan_SlotInAndAd_StatusAndAd_SourceChannelAndEndsAtAfterOrderByStartsAtDescIdAsc(
-            PromotionStatus status, Collection<PromotionSlot> slots, AdStatus adStatus, SourceChannel sourceChannel, Instant now);
+            @Param("status") PromotionStatus status, @Param("slots") Collection<PromotionSlot> slots, @Param("adStatus") AdStatus adStatus,
+            @Param("sourceChannel") SourceChannel sourceChannel, @Param("now") Instant now);
 }

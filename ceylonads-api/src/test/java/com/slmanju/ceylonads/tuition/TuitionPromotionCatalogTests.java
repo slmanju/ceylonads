@@ -57,6 +57,18 @@ class TuitionPromotionCatalogTests {
         seeder.run();
     }
 
+    // The real EZCLASS_LAUNCH_FREE launch campaign (live by default since V27) already covers all
+    // seven Tuition plans, so tests exercising base pricing or the older EZCLASS_LAUNCH_990/
+    // EZCLASS_HALF_PRICE campaigns must deactivate it first - rolled back automatically since every
+    // caller is @Transactional.
+    private void deactivateDefaultLaunchCampaign() throws Exception {
+        long id = promotionCampaignRepository.findByCode("EZCLASS_LAUNCH_FREE").orElseThrow().getId();
+        String adminToken = loginAndGetToken("admin", "admin123");
+        mockMvc.perform(patch("/api/admin/promotion-campaigns/" + id + "/deactivate")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk());
+    }
+
     @Test
     void catalogContainsExactlySevenActiveTuitionProducts() throws Exception {
         String response = mockMvc.perform(get("/api/tuition/promotions/plans"))
@@ -81,7 +93,10 @@ class TuitionPromotionCatalogTests {
     }
 
     @Test
+    @Transactional
     void searchPageSpotlightHasFriendlyNameAndCorrectBasePriceWithNoCampaignActive() throws Exception {
+        deactivateDefaultLaunchCampaign();
+
         mockMvc.perform(get("/api/tuition/promotions/plans"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.plan.code == '" + SPOTLIGHT_PLAN_CODE + "')].plan.name").value("Search Page Spotlight"))
@@ -98,6 +113,7 @@ class TuitionPromotionCatalogTests {
     @Test
     @Transactional
     void searchPageSpotlightIsRs990UnderTheLaunchCampaign() throws Exception {
+        deactivateDefaultLaunchCampaign();
         long campaignId = promotionCampaignRepository.findByCode("EZCLASS_LAUNCH_990").orElseThrow().getId();
         String adminToken = loginAndGetToken("admin", "admin123");
         mockMvc.perform(patch("/api/admin/promotion-campaigns/" + campaignId + "/activate")
@@ -114,6 +130,7 @@ class TuitionPromotionCatalogTests {
     @Test
     @Transactional
     void searchPageSpotlightIsRs1245UnderTheHalfPriceCampaign() throws Exception {
+        deactivateDefaultLaunchCampaign();
         long campaignId = promotionCampaignRepository.findByCode("EZCLASS_HALF_PRICE").orElseThrow().getId();
         String adminToken = loginAndGetToken("admin", "admin123");
         mockMvc.perform(patch("/api/admin/promotion-campaigns/" + campaignId + "/activate")
@@ -144,12 +161,14 @@ class TuitionPromotionCatalogTests {
     @Test
     void promotingAClassOnSearchPageSpotlightSurfacesItOnlyOnThatExactSlot() throws Exception {
         String kamalToken = loginAndGetToken("kamal", "customer123");
-        String adminToken = loginAndGetToken("admin", "admin123");
         String title = "Search Spotlight Purchase " + UUID.randomUUID();
 
         long adId = createApprovedAd(kamalToken, title, "education-tuition");
         long planId = planIdByCode(kamalToken, SPOTLIGHT_PLAN_CODE);
 
+        // The real EZCLASS_LAUNCH_FREE launch campaign (live by default since V27) makes this plan
+        // free, so the purchase auto-activates immediately - no payment/admin-activation step, see
+        // PromotionService#resolveCreationPlan.
         String createResponse = mockMvc.perform(post("/api/tuition/promotions")
                         .header("Authorization", "Bearer " + kamalToken)
                         .contentType("application/json")
@@ -159,11 +178,8 @@ class TuitionPromotionCatalogTests {
         JsonNode created = objectMapper.readTree(createResponse);
         long promotionId = created.get("id").asLong();
         assertEquals(SPOTLIGHT_SLOT_CODE, created.get("slotCode").asText());
-        assertEquals(0, new BigDecimal("2490.00").compareTo(new BigDecimal(created.get("price").asText())));
-
-        mockMvc.perform(patch("/api/admin/promotions/" + promotionId + "/activate")
-                        .header("Authorization", "Bearer " + adminToken))
-                .andExpect(status().isOk());
+        assertEquals(0, BigDecimal.ZERO.setScale(2).compareTo(new BigDecimal(created.get("price").asText())));
+        assertEquals("ACTIVE", created.get("status").asText());
 
         // Surfaces on the exact Search Page Spotlight slot...
         mockMvc.perform(get("/api/tuition/featured").param("slot", SPOTLIGHT_SLOT_CODE))

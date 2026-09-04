@@ -24,6 +24,10 @@ public record TuitionClassDetailResponse(
         AdStatus status,
         Instant createdAt,
         Instant publishedAt,
+        // TUITION public-visibility deadline; null until first published (PENDING/REJECTED before
+        // publication - see Ad.approve). The frontend derives "Expires in N days"/"Expired" labels
+        // from this rather than the backend precomputing a display string.
+        Instant expiresAt,
         TuitionAcademicInfo academic,
         TuitionClassInfo classInfo,
         List<LocationResponse> locations,

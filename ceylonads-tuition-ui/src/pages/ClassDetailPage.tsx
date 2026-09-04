@@ -8,6 +8,7 @@ import { LoadingState } from "../components/LoadingState/LoadingState";
 import { ErrorState } from "../components/ErrorState/ErrorState";
 import { EmptyState } from "../components/EmptyState/EmptyState";
 import { Seo } from "../components/Seo/Seo";
+import { JsonLd } from "../components/Seo/JsonLd";
 import { OnlineBadge } from "../components/Badge/Badge";
 import { useDetailPromotions } from "../hooks/useTuitionPromotions";
 import { useFeaturedTuition } from "../hooks/useFeaturedTuition";
@@ -19,6 +20,7 @@ import { FeaturedTuitionCarousel } from "../components/FeaturedTuitionCarousel/F
 import { SearchPromoCard } from "../components/SearchPromoCard/SearchPromoCard";
 import { SearchPromoPlaceholderCard } from "../components/SearchPromoCard/SearchPromoPlaceholderCard";
 import { tuitionRepository } from "../tuition/api/tuitionApi";
+import { resolveMediaUrl } from "../api/apiClient";
 import type { DeliveryMode } from "../tuition/model/tuition";
 import type { TuitionClassDetailResponse } from "../types/api";
 import { formatAdPrice } from "../utils/formatPrice";
@@ -28,6 +30,7 @@ import { getApiErrorMessage } from "../utils/apiError";
 import { toTelHref, toWhatsAppHref } from "../utils/phone";
 import { curriculumEnumFromValue } from "../utils/tuitionAttributes";
 import { truncateDescription } from "../utils/seo";
+import { breadcrumbListJsonLd, courseJsonLd } from "../utils/structuredData";
 import "./ClassDetailPage.css";
 
 // classMode is a single SELECT attribute (PHYSICAL/ONLINE/BOTH), not the mock layer's richer
@@ -44,8 +47,10 @@ function deliveryModesForPromotion(classModeValue: string | undefined): Delivery
 // slot (TUITION_DETAIL_TOP_CAROUSEL), independently configurable/purchasable from the search
 // page's TUITION_FEATURED carousel (see ClassesPage.tsx), even though both render through the
 // same compact FeaturedTuitionCarousel + SearchPromoCard/SearchPromoPlaceholderCard components.
-// Same 12-slot capacity/backfill convention as the search page, and excludes the ad currently
-// being viewed so a listing is never shown promoted immediately above itself.
+// `DETAIL_TOP_CAROUSEL_SLOT_COUNT` only bounds how many *real* promotions to fetch - the carousel
+// fills its own first visible viewport from what it measures itself, never padded to this fetch
+// cap (see root CLAUDE.md's promotion placeholder spec). Excludes the ad currently being viewed so
+// a listing is never shown promoted immediately above itself.
 const DETAIL_TOP_CAROUSEL_SLOT = "TUITION_DETAIL_TOP_CAROUSEL";
 const DETAIL_TOP_CAROUSEL_SLOT_COUNT = 12;
 
@@ -88,9 +93,6 @@ export function ClassDetailPage() {
     slot: DETAIL_TOP_CAROUSEL_SLOT,
     excludeAdId: detail?.id,
   });
-  const topPromotionsPlaceholderCount = topPromotionsLoading
-    ? 0
-    : Math.max(0, DETAIL_TOP_CAROUSEL_SLOT_COUNT - topPromotions.length);
 
   const { featured: detailRightFeatured } = useFeaturedTuition(1, {
     slot: DETAIL_RIGHT_SLOT,
@@ -107,11 +109,20 @@ export function ClassDetailPage() {
     setLoading(true);
     setError(null);
     setNotFound(false);
+    window.scrollTo(0, 0);
 
     tuitionRepository
       .getClassDetail(slug, controller.signal)
       .then((data) => {
-        if (!cancelled) setDetail(data);
+        if (cancelled) return;
+        setDetail(data);
+        // The id in the URL is authoritative; once the class loads, settle on its canonical
+        // slug. Compared against this effect's own `slug` (not a separately-reactive one) so a
+        // still-in-flight fetch for the PREVIOUS class can never compare its stale result against
+        // the just-changed URL and bounce navigation back to where the user came from.
+        if (data.slug !== slug) {
+          navigate(`/classes/${data.slug}`, { replace: true });
+        }
       })
       .catch((err) => {
         if (cancelled || (isAxiosError(err) && err.code === "ERR_CANCELED")) return;
@@ -129,14 +140,7 @@ export function ClassDetailPage() {
       cancelled = true;
       controller.abort();
     };
-  }, [slug]);
-
-  // The id in the URL is authoritative; once the class loads, settle on its canonical slug.
-  useEffect(() => {
-    if (detail && slug !== detail.slug) {
-      navigate(`/classes/${detail.slug}`, { replace: true });
-    }
-  }, [detail, slug, navigate]);
+  }, [slug, navigate]);
 
   if (loading) {
     return (
@@ -152,7 +156,7 @@ export function ClassDetailPage() {
         <Seo title="Class not found" noindex />
         <EmptyState
           title="Class not found"
-          message="This ad may have been removed, expired, or the link may be incorrect."
+          message="This class may have been removed, expired, or the link may be incorrect."
           action={
             <Link to="/classes" className="btn btn-primary">
               Browse Classes
@@ -248,18 +252,36 @@ export function ClassDetailPage() {
       </>
     ) : null;
 
+  const canonicalPath = `/classes/${detail.slug}`;
+  const seoDescription = truncateDescription(detail.description || detail.title);
+  const seoImage = detail.media[0]?.url ? resolveMediaUrl(detail.media[0].url) : undefined;
+
   return (
     <div className="container class-detail-page">
       <Seo
         title={locationLabel ? `${detail.title} — ${locationLabel}` : detail.title}
-        description={truncateDescription(detail.description || detail.title)}
+        description={seoDescription}
+        canonicalPath={canonicalPath}
+        ogImage={seoImage}
+      />
+      <JsonLd
+        id="class-detail-breadcrumb"
+        data={breadcrumbListJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Classes", path: "/classes" },
+          { name: detail.title, path: canonicalPath },
+        ])}
+      />
+      <JsonLd
+        id="class-detail-course"
+        data={courseJsonLd({ title: detail.title, description: seoDescription, canonicalPath })}
       />
 
       <section className="class-detail-page__top-promotions">
         <FeaturedTuitionCarousel
           items={topPromotions}
           loading={topPromotionsLoading}
-          placeholderCount={topPromotionsPlaceholderCount}
+          placeholderKeyPrefix="detail-featured-placeholder"
           compact
           renderItem={(card) => <SearchPromoCard card={card} />}
           renderPlaceholder={() => <SearchPromoPlaceholderCard />}
@@ -284,7 +306,10 @@ export function ClassDetailPage() {
 
       <div className="class-detail-page__layout">
         <div className="class-detail-page__gallery">
-          <ImageGallery media={detail.media} title={detail.title} />
+          {/* Keyed by slug so navigating directly between two class details (same route,
+              same mounted ClassDetailPage) remounts the gallery instead of carrying over the
+              previous class's activeIndex/lightbox state. */}
+          <ImageGallery key={detail.slug} media={detail.media} title={detail.title} />
 
           {/* Mobile/tablet only (see breakpoint below) - the sidebar carrying the desktop copy of
               this same card is hidden there, so Class Details still appears right after the

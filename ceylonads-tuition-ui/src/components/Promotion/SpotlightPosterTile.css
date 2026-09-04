@@ -1,0 +1,56 @@
+/* Poster-sized promotion tile shared by Homepage Spotlight and Search Page Spotlight's column
+   carousels. Same 4:5 poster frame + object-fit: contain as the normal listing cards
+   (SimilarClassCard/ClassCard/FeaturedTuitionCard) - see root CLAUDE.md's Spotlight poster tile
+   spec - so the poster reads at a proper, recognizable size rather than a sidebar thumbnail. */
+.spotlight-poster-tile {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.spotlight-poster-tile:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.spotlight-poster-tile__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.spotlight-poster-tile__image--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--color-text-subtle);
+}
+
+.spotlight-poster-tile__badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+}
+
+.spotlight-poster-tile--placeholder {
+  border: 1px dashed var(--color-accent);
+  background: var(--color-surface);
+}
+
+.spotlight-poster-tile--placeholder:hover {
+  box-shadow: none;
+  transform: none;
+  border-color: var(--color-accent-dark);
+}
+
+.spotlight-poster-tile--placeholder .spotlight-poster-tile__image {
+  opacity: 0.9;
+}

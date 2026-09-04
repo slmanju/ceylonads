@@ -37,7 +37,7 @@ export function Header() {
             Search
           </NavLink>
           <NavLink to="/pricing" className="tuition-header__link" onClick={closeMenu}>
-            Pricing
+            Promote
           </NavLink>
           <div className="tuition-header__actions">
             {isAuthenticated ? (
@@ -66,7 +66,7 @@ export function Header() {
 
             <button type="button" className="btn btn-accent tuition-header__post-btn" onClick={handlePostAd}>
               <FaPlus aria-hidden="true" />
-              Post Free Ad
+              Post Free Class
             </button>
           </div>
         </nav>

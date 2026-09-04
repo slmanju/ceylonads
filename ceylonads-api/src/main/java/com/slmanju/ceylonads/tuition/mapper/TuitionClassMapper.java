@@ -67,6 +67,7 @@ public class TuitionClassMapper {
                 ad.getStatus(),
                 ad.getCreatedAt(),
                 ad.getPublishedAt(),
+                ad.getExpiresAt(),
                 academic,
                 classInfo,
                 locations,

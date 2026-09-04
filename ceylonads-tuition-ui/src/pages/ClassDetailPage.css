@@ -197,7 +197,7 @@
 /* The sidebar is where the tall poster's height gets put to use, so its promo card should read
    as a normal, secondary promotion slot - not stretch to match the poster or the contact/details
    cards above it. Scoped to this page's sidebar/mobile-promo slots so the shared component's
-   sizing on the homepage rail (PromotionHomeRail) is untouched. */
+   sizing on other pages using it (e.g. PromotionSidebar) is untouched. */
 .class-detail-page__side .promotion-side-card,
 .class-detail-page__side .promotion-self-ad,
 .class-detail-page__promo-mobile .promotion-side-card,

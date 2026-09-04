@@ -150,4 +150,15 @@ public class Promotion {
         this.status = PromotionStatus.EXPIRED;
         this.updatedAt = Instant.now();
     }
+
+    // DEV/seed-only: directly sets lifecycle fields for deterministic sample data - e.g. a
+    // promotion that already ended, or one scheduled to start in the future - neither of which
+    // activate() can express since it always pins startsAt to now(). Never called by application
+    // business logic; mirrors Ad#seedExpiryOverride's equivalent purpose.
+    public void seedLifecycleOverride(PromotionStatus status, Instant startsAt, Instant endsAt) {
+        this.status = status;
+        this.startsAt = startsAt;
+        this.endsAt = endsAt;
+        this.updatedAt = Instant.now();
+    }
 }

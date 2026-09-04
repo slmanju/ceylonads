@@ -121,6 +121,13 @@ public class TuitionFeaturedService {
         }
 
         List<Ad> ads = featured.stream().map(Promotion::getAd).toList();
+        return toCards(ads);
+    }
+
+    private List<TuitionFeaturedCardResponse> toCards(List<Ad> ads) {
+        if (ads.isEmpty()) {
+            return List.of();
+        }
         List<Long> adIds = ads.stream().map(Ad::getId).toList();
 
         List<AdAttributeValue> attributeRows = tuitionAttributeValues.findByAdIdInAndKeyIn(adIds, CARD_ATTRIBUTE_KEYS);

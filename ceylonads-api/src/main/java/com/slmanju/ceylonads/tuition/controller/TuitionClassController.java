@@ -52,10 +52,9 @@ public class TuitionClassController {
             "Full filtered/paginated search scoped to Tuition listings only, for the Classes/Tutors/Online "
                     + "Classes pages. Mirrors GET /api/ads (same category/location tree resolution, price range, "
                     + "sort, attr.<key> attribute filters) but is scoped to Tuition listings only and returns the "
-                    + "same AdResponse shape - see AdSearchService. Unlike /api/ads, results here are always "
-                    + "purely organic (every ad's promoted flag is false, content is always exactly size items): "
-                    + "Tuition's Search Boost product renders as a separate, additive placement instead - see "
-                    + "GET /api/tuition/featured?slot=TUITION_SEARCH_BOOST.")
+                    + "same AdResponse shape - see AdSearchService. A matching class with an active "
+                    + "TUITION_SEARCH_BOOST promotion is ranked first among these same results (never additive to "
+                    + "size, never bypassing the active filters) and comes back with promoted=true.")
     PageResponse<AdResponse> search(
             @RequestParam(required = false) String q,
             @Parameter(description = "Category slug; matches this category and all of its descendants") @RequestParam(required = false) String category,
@@ -123,8 +122,21 @@ public class TuitionClassController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Deactivate one of my tuition classes", description =
             "Same semantics as the generic ad deactivate: a status change to DEACTIVATED, not a hard delete. "
-                    + "404s if the ad isn't yours or isn't a TUITION listing.")
+                    + "404s if the ad isn't yours or isn't a TUITION listing. Rejected while a paid promotion is "
+                    + "currently active on the listing.")
     void deactivate(Authentication authentication, @PathVariable Long id) {
         tuitionClassService.deactivateOwned(id, authentication.getName());
+    }
+
+    @PostMapping("/{id}/renew")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Renew one of my tuition classes", description =
+            "Eligible only when the class is EXPIRED, or ACTIVE and expiring within 7 days - prevents stacking "
+                    + "free renewals months in advance. Extends the free listing by 30 days from now (if EXPIRED) "
+                    + "or from its current expiry (if still ACTIVE). 404s if the ad isn't yours or isn't a TUITION "
+                    + "listing.")
+    TuitionClassDetailResponse renew(Authentication authentication, @PathVariable Long id) {
+        return tuitionClassService.renew(id, authentication.getName());
     }
 }

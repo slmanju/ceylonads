@@ -25,6 +25,7 @@ import com.slmanju.ceylonads.customer.service.CustomerService;
 import com.slmanju.ceylonads.location.dto.LocationResponse;
 import com.slmanju.ceylonads.media.entity.Media;
 import com.slmanju.ceylonads.media.repository.MediaRepository;
+import com.slmanju.ceylonads.promotion.service.PromotionService;
 import com.slmanju.ceylonads.tuition.dto.TuitionClassCardResponse;
 import com.slmanju.ceylonads.tuition.dto.TuitionClassCreateRequest;
 import com.slmanju.ceylonads.tuition.dto.TuitionClassDetailResponse;
@@ -37,8 +38,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,11 +72,24 @@ public class TuitionClassService {
             List.of("subject", "grade", "curriculum", "medium", "classMode", "classType");
     private static final List<String> CARD_ATTRIBUTE_KEYS = List.of("subject", "grade", "curriculum", "medium");
 
+    // Search Boost's exact slot code - see search() below and AdSearchService's slot-code overload.
+    private static final String SEARCH_BOOST_SLOT_CODE = "TUITION_SEARCH_BOOST";
+
     private static final int DEFAULT_SIMILAR_SIZE = 3;
     private static final int MAX_SIMILAR_SIZE = 10;
 
     private static final int DEFAULT_LATEST_SIZE = 6;
     private static final int MAX_LATEST_SIZE = 50;
+
+    // Tuition MVP policy (see CLAUDE.md): a free listing lives 30 days from first publication; a
+    // seller may have at most 15 concurrent active/pending listings; renewal is only offered once
+    // a listing is within 7 days of (or past) its expiry, and always adds another 30 days.
+    private static final int FREE_LISTING_DAYS = 30;
+    private static final int MAX_ACTIVE_LISTINGS = 15;
+    private static final int RENEWAL_WINDOW_DAYS = 7;
+    private static final Set<AdStatus> COUNTED_TOWARD_LIMIT = EnumSet.of(AdStatus.PENDING_REVIEW, AdStatus.ACTIVE);
+    private static final java.time.format.DateTimeFormatter EXPIRY_MESSAGE_DATE =
+            java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy").withZone(java.time.ZoneOffset.UTC);
 
     private final TuitionAdRepository tuitionAds;
     private final TuitionAdAttributeValueRepository tuitionAttributeValues;
@@ -84,6 +101,7 @@ public class TuitionClassService {
     private final CategoryRepository categories;
     private final CustomerService customerService;
     private final AdSearchService adSearchService;
+    private final PromotionService promotionService;
 
     public TuitionClassService(
             TuitionAdRepository tuitionAds,
@@ -95,7 +113,8 @@ public class TuitionClassService {
             AdService adService,
             CategoryRepository categories,
             CustomerService customerService,
-            AdSearchService adSearchService) {
+            AdSearchService adSearchService,
+            PromotionService promotionService) {
         this.tuitionAds = tuitionAds;
         this.tuitionAttributeValues = tuitionAttributeValues;
         this.attributeOptions = attributeOptions;
@@ -106,6 +125,7 @@ public class TuitionClassService {
         this.categories = categories;
         this.customerService = customerService;
         this.adSearchService = adSearchService;
+        this.promotionService = promotionService;
     }
 
     // --- Lifecycle (create / update / deactivate / My Classes) --------------------------------
@@ -113,6 +133,18 @@ public class TuitionClassService {
     @Transactional
     public TuitionClassDetailResponse create(String username, TuitionClassCreateRequest request) {
         requireTuitionCategory(request.categorySlug());
+
+        Customer seller = customerService.requireByUsername(username);
+        // Locks the seller's row for the rest of this transaction so two concurrent creates can
+        // never both observe count=14 and both proceed to create listing 15 and 16 - see
+        // CustomerRepository.lockById.
+        customerService.lockForUpdate(seller.getId());
+        long current = tuitionAds.countBySellerIdAndSourceChannelAndStatusIn(seller.getId(), SourceChannel.TUITION, COUNTED_TOWARD_LIMIT);
+        if (current >= MAX_ACTIVE_LISTINGS) {
+            throw new BadRequestException("You can have up to 15 active or pending classes. Deactivate an "
+                    + "existing class or wait for one to expire before posting another.");
+        }
+
         Ad ad = adService.createAd(username, toCommand(request), SourceChannel.TUITION);
         return toDetailResponses(List.of(ad)).get(0);
     }
@@ -128,10 +160,33 @@ public class TuitionClassService {
     }
 
     // Same semantics as the generic AdController#deactivate: a status change (DEACTIVATED), not a
-    // hard delete - see Ad#deactivate.
+    // hard delete - see Ad#deactivate. Blocked while a paid promotion is currently active on this
+    // listing: silently deactivating would destroy visibility the tutor already paid for.
     @Transactional
     public void deactivateOwned(Long id, String username) {
-        adService.deactivateOwned(id, username, SourceChannel.TUITION);
+        Ad ad = adService.requireOwned(id, username, SourceChannel.TUITION);
+        promotionService.activePromotionEndsAt(ad.getId()).ifPresent(endsAt -> {
+            throw new BadRequestException("This class has an active paid promotion until "
+                    + EXPIRY_MESSAGE_DATE.format(endsAt) + ". It cannot be deactivated until the promotion ends.");
+        });
+        ad.deactivate();
+    }
+
+    // Eligible when EXPIRED, or ACTIVE and within RENEWAL_WINDOW_DAYS of expiring - prevents a
+    // tutor from stacking free renewals months in advance (see Ad#renew for the actual extension).
+    @Transactional
+    public TuitionClassDetailResponse renew(Long id, String username) {
+        Ad ad = adService.requireOwned(id, username, SourceChannel.TUITION);
+        Instant now = Instant.now();
+        boolean eligible = ad.getStatus() == AdStatus.EXPIRED
+                || (ad.getStatus() == AdStatus.ACTIVE && ad.getExpiresAt() != null
+                        && !ad.getExpiresAt().isAfter(now.plus(Duration.ofDays(RENEWAL_WINDOW_DAYS))));
+        if (!eligible) {
+            throw new BadRequestException("This class isn't eligible for renewal yet. Renewal opens once a "
+                    + "class has expired or is within 7 days of expiring.");
+        }
+        ad.renew(FREE_LISTING_DAYS);
+        return toDetailResponses(List.of(ad)).get(0);
     }
 
     @Transactional(readOnly = true)
@@ -241,8 +296,9 @@ public class TuitionClassService {
         int size = clampSize(requestedSize);
         Ad current = loadTuitionAd(slug);
 
-        List<Ad> candidates = tuitionAds.findTop20ByCategoryIdAndStatusAndSourceChannelAndIdNotOrderByCreatedAtDesc(
-                current.getCategory().getId(), AdStatus.ACTIVE, SourceChannel.TUITION, current.getId());
+        List<Ad> candidates = tuitionAds.findSimilarActive(
+                current.getCategory().getId(), AdStatus.ACTIVE, SourceChannel.TUITION, current.getId(), Instant.now(),
+                PageRequest.of(0, 20));
         if (candidates.isEmpty()) {
             return List.of();
         }
@@ -281,8 +337,8 @@ public class TuitionClassService {
         int page = (requestedPage == null || requestedPage < 0) ? 0 : requestedPage;
         int size = clampLatestSize(requestedSize);
 
-        Page<Ad> adsPage = tuitionAds.findByStatusAndSourceChannelOrderByCreatedAtDesc(
-                AdStatus.ACTIVE, SourceChannel.TUITION, PageRequest.of(page, size));
+        Page<Ad> adsPage = tuitionAds.findActiveLatest(
+                AdStatus.ACTIVE, SourceChannel.TUITION, Instant.now(), PageRequest.of(page, size));
         List<Ad> ads = adsPage.getContent();
         if (ads.isEmpty()) {
             return PageResponse.from(adsPage.map(ad -> (TuitionClassCardResponse) null));
@@ -312,13 +368,14 @@ public class TuitionClassService {
     // location, price range, free-text q, sort) for the Classes/Tutors/Online Classes pages -
     // reuses the exact same category-tree resolution, attribute filtering and pagination the
     // generic /api/ads search uses, scoped to SourceChannel.TUITION so it only ever returns Tuition
-    // listings. Promotion ranking-boost is deliberately OFF (applyPromotionBoost=false): the
-    // generic CATEGORY_FEATURED boost the main site uses here would also match TUITION_FEATURED
-    // (the Homepage Featured slot, which happens to share that placement type), incorrectly
-    // ranking/badging a Homepage Featured purchase as "boosted" in search too. Tuition's actual
-    // Search Boost product (TUITION_SEARCH_BOOST) is a separate, additive placement instead - see
-    // TuitionFeaturedService (GET /api/tuition/featured?slot=TUITION_SEARCH_BOOST) and
-    // ClassSearchResults.tsx - so these results are always exactly `size` organic listings.
+    // listings. Ranked by Tuition's own Search Boost product (TUITION_SEARCH_BOOST): a matching ad
+    // with a currently active promotion in that exact slot is ranked first among these same
+    // results (never additive to `size`, never bypassing the active filters) and comes back with
+    // promoted=true - see AdSearchService's slot-code overload. Deliberately the exact-slot-code
+    // overload rather than applyPromotionBoost=true: the generic CATEGORY_FEATURED boost that
+    // overload would infer also matches TUITION_FEATURED (the Homepage Featured slot, which happens
+    // to share that placement type), which would incorrectly rank/badge a Homepage Featured
+    // purchase as "boosted" in search too.
     @Transactional(readOnly = true)
     public PageResponse<AdResponse> search(
             String q,
@@ -331,7 +388,7 @@ public class TuitionClassService {
             String sort,
             List<AttributeFilterCriterion> attributeFilters) {
         return adSearchService.search(q, category, location, minPrice, maxPrice, page, size, sort,
-                attributeFilters, SourceChannel.TUITION, false);
+                attributeFilters, SourceChannel.TUITION, SEARCH_BOOST_SLOT_CODE);
     }
 
     private int clampLatestSize(Integer requestedSize) {
@@ -346,7 +403,7 @@ public class TuitionClassService {
     // re-walking the category tree on every request.
     private Ad loadTuitionAd(String slug) {
         Long id = Slugs.extractTrailingId(slug);
-        return tuitionAds.findByIdAndStatusAndSourceChannel(id, AdStatus.ACTIVE, SourceChannel.TUITION)
+        return tuitionAds.findPublicByIdAndStatusAndSourceChannel(id, AdStatus.ACTIVE, SourceChannel.TUITION, Instant.now())
                 .orElseThrow(() -> new NotFoundException("Tuition class not found: " + slug));
     }
 

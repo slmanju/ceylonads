@@ -20,6 +20,10 @@ app:
   # Origin the public React app is served from. sitemap.xml needs this to emit absolute page
   # URLs since the API and the frontend are different origins in every environment.
   public-site-url: ${PUBLIC_SITE_URL:http://localhost:5173}
+  # Origin ezClass's tuition frontend (ceylonads-tuition-ui) is served from - a separate static
+  # SPA on its own domain (ezclass.lk in production), not bundled into this backend like the main
+  # site's build. tuition sitemap.xml needs this to emit absolute /classes page URLs.
+  tuition-site-url: ${EZCLASS_SITE_URL:http://localhost:5174}
   payment:
     bank-transfer:
       # Phase 3 MVP: manual bank transfer only, one demo account. Local/demo values below are

@@ -221,7 +221,7 @@ export function PostAdWizard({ mode, adId, initialValues, initialMedia }: AdWiza
         setCompletedAdId(targetAdId);
       } catch (err) {
         setSubmitError(
-          getApiErrorMessage(err, mode === "create" ? "Could not create your ad. Please try again." : "Could not save your changes. Please try again."),
+          getApiErrorMessage(err, mode === "create" ? "Could not create your class. Please try again." : "Could not save your changes. Please try again."),
         );
         setSubmitting(false);
         return;
@@ -248,7 +248,7 @@ export function PostAdWizard({ mode, adId, initialValues, initialMedia }: AdWiza
 
   return (
     <div className="post-ad-wizard container">
-      <h1 className="post-ad-wizard__title">{mode === "edit" ? "Edit your tuition ad" : "Post a tuition ad"}</h1>
+      <h1 className="post-ad-wizard__title">{mode === "edit" ? "Edit your class" : "Post a class"}</h1>
 
       <PostAdStepper currentIndex={stepIndex} maxReachedIndex={maxReachedIndex} onStepClick={goToStep} />
 

@@ -24,10 +24,12 @@ interface ClassGridProps {
   insertAfter?: { index: number; node: ReactNode };
 }
 
-// Organic tuition results only - sponsored content lives in the dedicated SearchBoostSection above
-// this grid and the Search Page Spotlight rail/inline card (see ClassSearchResults), never mixed
-// into these cards, so the result count and pagination the page shows always reflect real backend
-// search results.
+// Renders the search API's own result order as-is - a matching ad with an active Search Boost
+// promotion (ad.promoted) is already ranked first by the backend and gets its normal PROMOTED
+// badge from ClassCard, so no separate promoted section/reordering happens here. The Search Page
+// Spotlight rail/inline card (see ClassSearchResults) is the only sponsored content NOT part of
+// this grid, so the result count and pagination this page shows always reflect real backend search
+// results.
 export function ClassGrid({
   ads,
   loading = false,

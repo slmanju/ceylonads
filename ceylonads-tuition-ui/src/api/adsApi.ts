@@ -46,3 +46,16 @@ export async function updateAd(id: number | string, payload: CreateAdRequest): P
 export async function deactivateAd(id: number | string): Promise<void> {
   await apiClient.delete(`/api/ads/${id}`);
 }
+
+// Tuition-scoped deactivate (see TuitionClassController) - used instead of the generic
+// deactivateAd above so the backend's "can't deactivate while a paid promotion is active" check
+// (channel-specific to Tuition) actually applies to My Classes' Deactivate action.
+export async function deactivateTuitionClass(id: number | string): Promise<void> {
+  await apiClient.delete(`/api/tuition/classes/${id}`);
+}
+
+// POST /api/tuition/classes/{id}/renew - eligible only when EXPIRED or within 7 days of expiring
+// (backend-enforced). Response body isn't modeled here; callers re-fetch My Classes afterwards.
+export async function renewTuitionClass(id: number | string): Promise<void> {
+  await apiClient.post(`/api/tuition/classes/${id}/renew`);
+}

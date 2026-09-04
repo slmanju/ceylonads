@@ -88,6 +88,8 @@ export interface AdResponse {
   status: AdStatus;
   createdAt: string;
   publishedAt: string | null;
+  // TUITION-only public-visibility deadline; always null for MAIN_SITE/BOARDING ads.
+  expiresAt: string | null;
   reviewedAt: string | null;
   media: MediaResponse[];
   promoted: boolean;

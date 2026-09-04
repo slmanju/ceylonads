@@ -6,11 +6,20 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
   margin-bottom: 20px;
 }
 
 .my-ads-page__header h1 {
   font-size: 1.5rem;
+}
+
+.my-ads-page__limit {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  margin-right: auto;
+  margin-left: 16px;
 }
 
 .my-ads-page__flash {

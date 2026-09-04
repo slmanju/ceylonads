@@ -70,4 +70,9 @@ public class SampleDataSeedController {
         return ResponseEntity.ok(seeder.activateDevLaunchCampaign());
     }
 
+    @GetMapping("/tuition-promotions")
+    public ResponseEntity<SeedResult> seedTuitionPromotionShowcase() {
+        return ResponseEntity.ok(seeder.seedTuitionPromotionShowcase());
+    }
+
 }

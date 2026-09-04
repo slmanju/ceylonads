@@ -28,8 +28,9 @@ export type TuitionPromotionPlacement =
   | "TUITION_DETAIL_RIGHT";
 
 // PROMOTED is used for search-results-page placements (Search Page Spotlight) to read consistently
-// with the rest of the search page's paid inventory (see SearchPromoCard/SearchBoostSection),
-// rather than FEATURED's homepage/detail-page wording.
+// with the rest of the search page's paid inventory (see SearchPromoCard), rather than FEATURED's
+// homepage/detail-page wording. Search Boost's own PROMOTED badge is unrelated to this type - it's
+// a plain ClassCard badge driven by AdResponse.promoted, not a PromotionTarget-based placement.
 export type PromotionLabel = "SPONSORED" | "FEATURED" | "PROMOTED";
 
 export type PromotionTargetType = "AD" | "TEACHER_PROFILE" | "INSTITUTE_PROFILE" | "EXTERNAL";
@@ -67,6 +68,9 @@ export interface TuitionPromotion {
   imageUrl?: string;
   target: PromotionTarget;
   ctaLabel?: string;
+  /** Monthly/class fee, shown on compact card presentations (e.g. Search Page Spotlight) that
+   *  have room to surface it. Omit to hide the price line entirely. */
+  price?: number;
   /** Lower sorts first within a placement. */
   displayOrder: number;
   /** ISO date (yyyy-MM-dd). Omit for an always-active promotion. */

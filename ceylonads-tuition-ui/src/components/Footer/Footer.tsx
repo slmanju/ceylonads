@@ -18,19 +18,16 @@ export function Footer() {
           <p className="tuition-footer__heading">Discover</p>
           <Link to="/classes">Browse all classes</Link>
           <Link to="/online-classes">Online classes</Link>
-          <Link to="/tutors">Tutors</Link>
-          <Link to="/districts">Browse by district</Link>
         </div>
 
         <div className="tuition-footer__col">
           <p className="tuition-footer__heading">Account</p>
-          <Link to="/post-ad">Post a tuition ad</Link>
+          <Link to="/post-ad">Post a Class</Link>
           <Link to="/login">Login</Link>
-          <Link to="/my-ads">My Classes</Link>
         </div>
 
         <div className="tuition-footer__col">
-          <p className="tuition-footer__heading">CeylonAds</p>
+          <p className="tuition-footer__heading">Legal</p>
           <span className="tuition-footer__static">Terms of use</span>
           <span className="tuition-footer__static">Privacy policy</span>
         </div>

@@ -62,7 +62,7 @@ export function ReviewStep({
 
   return (
     <div className="post-ad-step">
-      <h2 className="post-ad-step__title">Review your ad</h2>
+      <h2 className="post-ad-step__title">Review your class</h2>
       <p className="post-ad-step__subtitle">Make sure everything looks right before submitting.</p>
 
       <div className="review-step">
@@ -166,7 +166,7 @@ export function ReviewStep({
       {submitError && <p className="post-ad-form__error">{submitError}</p>}
 
       <button type="button" className="btn btn-accent btn-block review-step__submit" onClick={onSubmit} disabled={submitting}>
-        {submitting ? "Submitting…" : mode === "edit" ? "Save Changes" : "Submit Ad"}
+        {submitting ? "Submitting…" : mode === "edit" ? "Save Changes" : "Submit Class"}
       </button>
     </div>
   );

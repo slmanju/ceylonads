@@ -46,6 +46,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -134,6 +135,12 @@ public class PromotionService {
         if (ad.getStatus() != AdStatus.ACTIVE) {
             throw new BadRequestException("Only active ads can be promoted");
         }
+        // A Tuition ad can still read ACTIVE in the brief window between its expiresAt passing and
+        // the next scheduler sweep (see TuitionExpiryScheduler); it must not be sellable while
+        // publicly invisible - the tutor has to Renew first (see TuitionClassService.renew).
+        if (ad.getSourceChannel() == SourceChannel.TUITION && ad.getExpiresAt() != null && !ad.getExpiresAt().isAfter(Instant.now())) {
+            throw new BadRequestException("This class has expired. Renew it before purchasing a promotion.");
+        }
 
         PromotionPlan plan = planService.requirePlan(promotionPlanId);
         if (!plan.isActive()) {
@@ -161,11 +168,11 @@ public class PromotionService {
             throw new BadRequestException("This ad already has a pending or active promotion for this placement");
         }
 
-        CreationPlan creationPlan = resolveCreationPlan(plan, false);
         // The customer never supplies a price: whatever campaign (if any) is active right now for
         // this plan's channel is resolved and snapshotted here, server-side, as the charged price.
         // A later price/campaign change never retroactively alters this already-sold promotion.
         BigDecimal chargedPrice = pricingService.resolve(plan, Instant.now()).effectivePrice();
+        CreationPlan creationPlan = resolveCreationPlan(plan, chargedPrice, false);
         Promotion promotion = promotions.save(new Promotion(
                 ad, customer, plan, chargedPrice, plan.getDurationDays(), creationPlan.initialStatus(), false));
         finishCreation(promotion, creationPlan);
@@ -341,7 +348,7 @@ public class PromotionService {
             throw new BadRequestException("This placement is no longer available");
         }
 
-        CreationPlan creationPlan = resolveCreationPlan(plan, request.paymentWaived());
+        CreationPlan creationPlan = resolveCreationPlan(plan, plan.getPrice(), request.paymentWaived());
         Promotion promotion;
         if (slot.getPlacementType().isBanner()) {
             if (request.bannerMediaId() == null) {
@@ -485,6 +492,31 @@ public class PromotionService {
                 .collect(Collectors.toMap(p -> p.getAd().getId(), Promotion::getStartsAt));
     }
 
+    /**
+     * How many results a specific-slot-code ranking boost (e.g. Tuition's TUITION_SEARCH_BOOST)
+     * should promote to the top of matching search results at once - mirrors
+     * {@link #topSearchVisibleCount()} but for a placement resolved by exact slot code rather than
+     * placement type. Falls back to "no cap" if the slot can't be resolved.
+     */
+    @Transactional(readOnly = true)
+    public int visibleCountForSlotCode(String slotCode) {
+        return slotService.resolveSlotByCode(slotCode)
+                .map(PromotionSlot::getVisibleCount)
+                .orElse(Integer.MAX_VALUE);
+    }
+
+    // Exact-slot-code sibling of activeStartsAtForAds(Collection, PlacementType) above.
+    @Transactional(readOnly = true)
+    public Map<Long, Instant> activeStartsAtForAdsBySlotCode(Collection<Long> adIds, String slotCode) {
+        if (adIds.isEmpty()) {
+            return Map.of();
+        }
+        return promotions.findByAdIdInAndStatusAndPlan_Slot_CodeAndEndsAtAfter(
+                        adIds, PromotionStatus.ACTIVE, slotCode, Instant.now())
+                .stream()
+                .collect(Collectors.toMap(p -> p.getAd().getId(), Promotion::getStartsAt));
+    }
+
     // What a plan (plus an optional admin payment waiver) implies about how a brand-new promotion
     // should start out: PENDING_PAYMENT with a Payment record, PENDING_APPROVAL with no Payment,
     // or activated immediately subject to slot capacity. paymentRequired=true with
@@ -492,12 +524,18 @@ public class PromotionService {
     private record CreationPlan(PromotionStatus initialStatus, boolean createPayment, boolean autoActivate) {
     }
 
-    private CreationPlan resolveCreationPlan(PromotionPlan plan, boolean paymentWaived) {
-        boolean paymentRequired = plan.isPaymentRequired() && !paymentWaived;
+    // chargedPrice is the amount actually resolved for this purchase (base price, or a campaign's
+    // discounted price - possibly zero). A plan's payment_required/approval_required flags describe
+    // its normal paid economics; they never apply to a promotion a live campaign has made free, so
+    // that customer is never asked to pay, or wait on approval, for something that costs nothing -
+    // see PromotionPricingService.
+    private CreationPlan resolveCreationPlan(PromotionPlan plan, BigDecimal chargedPrice, boolean paymentWaived) {
+        boolean effectivelyFree = chargedPrice.compareTo(BigDecimal.ZERO) == 0;
+        boolean paymentRequired = plan.isPaymentRequired() && !paymentWaived && !effectivelyFree;
         if (paymentRequired) {
             return new CreationPlan(PromotionStatus.PENDING_PAYMENT, true, false);
         }
-        if (plan.isApprovalRequired()) {
+        if (plan.isApprovalRequired() && !effectivelyFree) {
             return new CreationPlan(PromotionStatus.PENDING_APPROVAL, false, false);
         }
         // Initial status is a placeholder here: finishCreation() immediately activates it.
@@ -531,6 +569,25 @@ public class PromotionService {
             throw new BadRequestException("This placement is fully booked right now. Please choose a different slot.");
         }
         promotion.activate();
+
+        // The paid-duration guarantee (see Ad#extendExpiryToAtLeast): a Tuition promotion must
+        // never outlive the listing it was bought for. Runs in the same transaction as activation
+        // itself, so a promotion can never end up active without this protection also applying.
+        if (promotion.getKind() == PromotionKind.AD_PROMOTION && promotion.getAd() != null
+                && promotion.getAd().getSourceChannel() == SourceChannel.TUITION) {
+            promotion.getAd().extendExpiryToAtLeast(promotion.getEndsAt());
+        }
+    }
+
+    /**
+     * The latest-ending currently-active promotion on this ad, if any - backs Tuition's
+     * deactivation guard (see TuitionClassService.deactivateOwned): a listing with a live paid
+     * promotion can't be deactivated until that promotion ends.
+     */
+    @Transactional(readOnly = true)
+    public Optional<Instant> activePromotionEndsAt(Long adId) {
+        return promotions.findTopByAdIdAndStatusAndEndsAtAfterOrderByEndsAtDesc(adId, PromotionStatus.ACTIVE, Instant.now())
+                .map(Promotion::getEndsAt);
     }
 
     private void requireCategoryCompatible(Ad ad, PromotionSlot slot) {

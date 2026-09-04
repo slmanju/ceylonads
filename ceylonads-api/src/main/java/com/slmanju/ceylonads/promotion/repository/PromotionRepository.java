@@ -15,6 +15,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface PromotionRepository extends JpaRepository<Promotion, Long> {
 
@@ -44,6 +45,12 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
     // sample ads) so they can be deleted before the ad itself is removed.
     List<Promotion> findByAdIdIn(Collection<Long> adIds);
 
+    // Tuition's deactivation guard (see PromotionService.activePromotionEndsAt /
+    // TuitionClassService.deactivateOwned): the latest-ending currently-active promotion on this
+    // ad, if any - used both to decide whether to block deactivation and to show the tutor the
+    // date it becomes possible again.
+    Optional<Promotion> findTopByAdIdAndStatusAndEndsAtAfterOrderByEndsAtDesc(Long adId, PromotionStatus status, Instant now);
+
     // ad.location was removed - an ad now has 0..N locations, batch-loaded separately by
     // PromotionService via AdLocationService rather than joined into this entity graph.
     @EntityGraph(attributePaths = {"ad", "ad.category", "ad.seller"})
@@ -62,6 +69,11 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
     // entity graph is needed here.
     List<Promotion> findByAdIdInAndStatusAndPlan_Slot_PlacementTypeAndEndsAtAfter(
             Collection<Long> adIds, PromotionStatus status, PlacementType placementType, Instant now);
+
+    // Exact-slot-code sibling of the above, for ranking by a specific slot (e.g. TUITION_SEARCH_BOOST)
+    // rather than a whole placement type - see AdSearchService's Tuition Search Boost overload.
+    List<Promotion> findByAdIdInAndStatusAndPlan_Slot_CodeAndEndsAtAfter(
+            Collection<Long> adIds, PromotionStatus status, String slotCode, Instant now);
 
     // Currently-active (unexpired) promotions occupying a slot right now.
     long countByPlan_SlotAndStatusAndEndsAtAfter(PromotionSlot slot, PromotionStatus status, Instant now);

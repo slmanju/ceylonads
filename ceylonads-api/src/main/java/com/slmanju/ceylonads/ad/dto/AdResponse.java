@@ -23,6 +23,10 @@ public record AdResponse(
         AdStatus status,
         Instant createdAt,
         Instant publishedAt,
+        // TUITION-only public-visibility deadline; always null for MAIN_SITE/BOARDING (see
+        // Ad.expiresAt). The frontend derives human-friendly "Expires in N days"/"Expired"
+        // labels from this rather than the backend precomputing a display string.
+        Instant expiresAt,
         // When this ad was last approved/rejected; null until first reviewed. Mirrors
         // PaymentResponse.reviewedAt - the reviewer's account id itself is not exposed here either.
         Instant reviewedAt,

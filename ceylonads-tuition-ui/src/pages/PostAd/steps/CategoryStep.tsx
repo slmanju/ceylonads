@@ -27,7 +27,7 @@ export function CategoryStep({ subcategories, loading, error, categorySlug, onSe
   return (
     <div className="post-ad-step">
       <h2 className="post-ad-step__title">What kind of class are you advertising?</h2>
-      <p className="post-ad-step__subtitle">Choose the class type that best fits your ad.</p>
+      <p className="post-ad-step__subtitle">Choose the class type that best fits what you're offering.</p>
 
       <div className="category-step__grid">
         {subcategories.map((category) => {

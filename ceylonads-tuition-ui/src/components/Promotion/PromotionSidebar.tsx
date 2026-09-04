@@ -14,8 +14,8 @@ interface PromotionSidebarProps {
 // the organic result count or pagination. Renders whichever slots are actually filled (a slot with
 // no eligible promotion is simply skipped, never an empty gap). The real backend
 // (GET /api/tuition/promotions) can legitimately return no active promotion for any slot, so when
-// none are filled this falls back to the same house ad PromotionHomeRail uses, rather than
-// collapsing the column - the sidebar always has something to show.
+// none are filled this falls back to the same PromotionSelfAd house ad other fixed single-card
+// placements use, rather than collapsing the column - the sidebar always has something to show.
 export function PromotionSidebar({ top, middle, bottom }: PromotionSidebarProps) {
   const items = [top, middle, bottom].filter((promotion): promotion is TuitionPromotion => Boolean(promotion));
 

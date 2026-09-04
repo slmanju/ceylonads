@@ -26,6 +26,7 @@ import com.slmanju.ceylonads.promotion.entity.PromotionStatus;
 import com.slmanju.ceylonads.promotion.repository.PromotionCampaignRepository;
 import com.slmanju.ceylonads.promotion.repository.PromotionPlanRepository;
 import com.slmanju.ceylonads.promotion.repository.PromotionRepository;
+import com.slmanju.ceylonads.promotion.service.PromotionPricingService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -62,6 +63,7 @@ public class SampleDataSeeder {
     private final PromotionPlanRepository promotionPlans;
     private final PromotionRepository promotions;
     private final PromotionCampaignRepository promotionCampaigns;
+    private final PromotionPricingService promotionPricing;
     private final AdAttributeService adAttributeService;
     private final AdLocationService adLocationService;
     private final AdAttributeValueRepository adAttributeValues;
@@ -88,6 +90,7 @@ public class SampleDataSeeder {
             PromotionPlanRepository promotionPlans,
             PromotionRepository promotions,
             PromotionCampaignRepository promotionCampaigns,
+            PromotionPricingService promotionPricing,
             AdAttributeService adAttributeService,
             AdLocationService adLocationService,
             AdAttributeValueRepository adAttributeValues,
@@ -102,6 +105,7 @@ public class SampleDataSeeder {
         this.promotionPlans = promotionPlans;
         this.promotions = promotions;
         this.promotionCampaigns = promotionCampaigns;
+        this.promotionPricing = promotionPricing;
         this.adAttributeService = adAttributeService;
         this.adLocationService = adLocationService;
         this.adAttributeValues = adAttributeValues;
@@ -182,7 +186,13 @@ public class SampleDataSeeder {
     public SeedResult seedTuitionAds() {
         List<AdSeed> seeds = tuitionAdSeeds();
         cleanupStaleTuitionAds(seeds.stream().map(AdSeed::title).collect(Collectors.toSet()));
-        return seedAds("tuition", seeds);
+        SeedResult result = seedAds("tuition", seeds);
+
+        Map<String, Ad> tuitionAdsByTitle = ads.findBySourceChannel(SourceChannel.TUITION).stream()
+                .collect(Collectors.toMap(Ad::getTitle, a -> a, (a, b) -> a));
+        applyTuitionExpirySamples(tuitionAdsByTitle);
+
+        return result;
     }
 
     // Reconciles the TUITION-channel ad set down to exactly the curated list above: anything with
@@ -253,33 +263,198 @@ public class SampleDataSeeder {
         return new SeedResult("promotions", after - before, 0, "Sample promotions created.");
     }
 
-    // DEV-only: makes the ezClass launch campaign (EZCLASS_LAUNCH_990, master data from
-    // V18/V20__*.sql) immediately live and testable via GET /api/tuition/promotions/campaign,
-    // without ever touching production Flyway migrations. The campaign row itself - pricing, plan
-    // mappings, presentation copy (headline/message/ctaLabel), customer_visible/show_banner/
-    // show_modal - already exists from master data; this only re-windows its [starts_at, ends_at)
-    // to cover "now" and flips active=true, since a fixed-at-migration-time window goes stale the
-    // longer a dev database has existed. Idempotent and safe to call on every startup: it always
-    // recomputes the window relative to the current instant rather than accumulating state, and
-    // touches no other campaign fields (pricing/name/plans stay exactly as master data defined
-    // them). EZCLASS_HALF_PRICE is explicitly deactivated in the same pass so DEV never ends up
-    // with two overlapping active storefront campaigns for TUITION - see
-    // PromotionCampaignService#requireNoOverlappingStorefrontCampaign, which this seeder
-    // deliberately bypasses (see PromotionCampaign#activateForDevStorefront) and must therefore
-    // preserve by hand.
+    // DEV-only: verifies the ezClass free launch campaign (EZCLASS_LAUNCH_FREE, master data from
+    // V27__ezclass_free_launch_campaign.sql) is live and testable via
+    // GET /api/tuition/promotions/campaign, without ever touching production Flyway migrations.
+    // Unlike the retired EZCLASS_LAUNCH_990 (seeded inactive with a placeholder window that this
+    // method used to re-window to "now" on every startup - see activateForDevStorefront),
+    // EZCLASS_LAUNCH_FREE already carries a real, concrete [starts_at, ends_at) window and
+    // active=true straight from master data, so DEV intentionally reuses that same real window
+    // rather than inventing a separate DEV-only one. This only defensively re-affirms the retired
+    // campaigns stay deactivated, in case a dev database had them hand-activated for testing before
+    // this migration ran - EZCLASS_LAUNCH_FREE's own activation is left entirely to master data.
     @Transactional
     public SeedResult activateDevLaunchCampaign() {
-        PromotionCampaign launch = promotionCampaigns.findByCode("EZCLASS_LAUNCH_990").orElse(null);
-        requireMasterData("promotion campaign", "EZCLASS_LAUNCH_990", launch != null);
+        PromotionCampaign launch = promotionCampaigns.findByCode("EZCLASS_LAUNCH_FREE").orElse(null);
+        requireMasterData("promotion campaign", "EZCLASS_LAUNCH_FREE", launch != null);
 
-        Instant now = Instant.now();
-        launch.activateForDevStorefront(now.minus(Duration.ofHours(1)), now.plus(Duration.ofDays(90)));
-
-        promotionCampaigns.findByCode("EZCLASS_HALF_PRICE").ifPresent(halfPrice -> halfPrice.setActive(false));
+        promotionCampaigns.findByCode("EZCLASS_LAUNCH_990").ifPresent(old -> old.setActive(false));
+        promotionCampaigns.findByCode("EZCLASS_HALF_PRICE").ifPresent(old -> old.setActive(false));
 
         return new SeedResult("promotion-campaign", 0, 0,
-                "EZCLASS_LAUNCH_990 activated for DEV (active=true, window now-1h .. now+90d); "
-                        + "EZCLASS_HALF_PRICE deactivated to avoid overlap.");
+                "EZCLASS_LAUNCH_FREE verified active for DEV using its real master-data window; "
+                        + "EZCLASS_LAUNCH_990/EZCLASS_HALF_PRICE kept deactivated to avoid overlap.");
+    }
+
+    // DEV-only: comprehensive Tuition promotion showcase exercising all seven Tuition promotion
+    // products (Homepage/Search/Detail Featured, Homepage/Search Spotlight, Search Boost) with
+    // deliberately varied active counts (some sparse enough to exercise the frontend's
+    // visibleCount+1 placeholder composition, some deep enough to exercise real carousel overflow),
+    // campaign-aware pricing, paid-duration expiry protection, and lifecycle variety
+    // (expired/scheduled/cancelled). Idempotent per ad+slot (see seedTuitionPromotion) rather than
+    // the coarse whole-table guard seedPromotions() uses, so this can be safely re-invoked on an
+    // already-seeded DEV database - including one where unrelated (non-Tuition) promotions already
+    // exist - without duplicating rows. This is the authoritative Tuition promotion dataset and
+    // supersedes the handful of legacy Tuition rows seedSamplePromotionsIfMissing used to create
+    // (removed from there in favor of this method).
+    @Transactional
+    public SeedResult seedTuitionPromotionShowcase() {
+        for (String code : List.of(
+                "TUITION_HOME_FEATURED_30D", "TUITION_HOME_LATEST_RIGHT_30D", "TUITION_SEARCH_TOP_30D",
+                "TUITION_SEARCH_BOOST_30D", "TUITION_SEARCH_SIDEBAR_TOP_30D", "TUITION_DETAIL_TOP_30D",
+                "TUITION_DETAIL_RIGHT_30D")) {
+            requireMasterData("promotion plan", code, promotionPlans.findByCode(code).isPresent());
+        }
+
+        // Ensures seeded promotions reflect real, current campaign pricing (e.g. the EZCLASS_LAUNCH_FREE
+        // launch price) via PromotionPricingService below, rather than a hardcoded amount.
+        activateDevLaunchCampaign();
+
+        Map<String, Ad> tuitionAdsByTitle = ads.findBySourceChannel(SourceChannel.TUITION).stream()
+                .collect(Collectors.toMap(Ad::getTitle, ad -> ad, (a, b) -> a));
+
+        int before = (int) promotions.count();
+
+        // Homepage Featured (TUITION_HOME_FEATURED_30D) - target 3 active. Desktop visibleCount=4,
+        // so the frontend should compose 3 real + 2 "Advertise Here" placeholders.
+        seedTuitionPromotion(tuitionAdsByTitle, "A/L Combined Mathematics - Theory & Revision",
+                "TUITION_HOME_FEATURED_30D", PromotionStatus.ACTIVE, 1);
+        seedTuitionPromotion(tuitionAdsByTitle, "Spoken English Classes - Beginner to Advanced",
+                "TUITION_HOME_FEATURED_30D", PromotionStatus.ACTIVE, 10);
+        seedTuitionPromotion(tuitionAdsByTitle, "Coding for Kids - Scratch & Python",
+                "TUITION_HOME_FEATURED_30D", PromotionStatus.ACTIVE, 20);
+
+        // Homepage Spotlight (TUITION_HOME_LATEST_RIGHT_30D) - target 7 active: more than the
+        // 4-visible desktop viewport, so the vertical carousel has genuine overflow to page
+        // through (poster-only tiles - see SpotlightPosterTile on the frontend).
+        seedTuitionPromotion(tuitionAdsByTitle, "A/L Physics - One-on-One Online Classes",
+                "TUITION_HOME_LATEST_RIGHT_30D", PromotionStatus.ACTIVE, 1);
+        seedTuitionPromotion(tuitionAdsByTitle, "O/L Mathematics - English Medium Group Classes",
+                "TUITION_HOME_LATEST_RIGHT_30D", PromotionStatus.ACTIVE, 4);
+        seedTuitionPromotion(tuitionAdsByTitle, "O/L English - Individual & Group Options",
+                "TUITION_HOME_LATEST_RIGHT_30D", PromotionStatus.ACTIVE, 10);
+        seedTuitionPromotion(tuitionAdsByTitle, "Cambridge IGCSE Mathematics - Group & Online Batch",
+                "TUITION_HOME_LATEST_RIGHT_30D", PromotionStatus.ACTIVE, 20);
+        seedTuitionPromotion(tuitionAdsByTitle, "IELTS Preparation - Band 7+ Target",
+                "TUITION_HOME_LATEST_RIGHT_30D", PromotionStatus.ACTIVE, 1);
+        seedTuitionPromotion(tuitionAdsByTitle, "Piano Lessons for Kids & Adults",
+                "TUITION_HOME_LATEST_RIGHT_30D", PromotionStatus.ACTIVE, 4);
+        seedTuitionPromotion(tuitionAdsByTitle, "A/L ICT - O/L & A/L Combined Batch",
+                "TUITION_HOME_LATEST_RIGHT_30D", PromotionStatus.ACTIVE, 10);
+
+        // Search Page Featured (TUITION_SEARCH_TOP_30D) - target 3 active. Desktop visibleCount=4,
+        // so the frontend should compose 3 real + 2 "Advertise Here" placeholders (5 total, arrows
+        // functional). Plus one EXPIRED promotion for plan/history coverage predating this set.
+        seedTuitionPromotion(tuitionAdsByTitle, "Spoken English Classes - Beginner to Advanced",
+                "TUITION_SEARCH_TOP_30D", PromotionStatus.ACTIVE, 1);
+        seedTuitionPromotion(tuitionAdsByTitle, "A/L Combined Mathematics - Theory & Revision",
+                "TUITION_SEARCH_TOP_30D", PromotionStatus.ACTIVE, 4);
+        seedTuitionPromotion(tuitionAdsByTitle, "A/L Physics - One-on-One Online Classes",
+                "TUITION_SEARCH_TOP_30D", PromotionStatus.ACTIVE, 10);
+        seedTuitionPromotion(tuitionAdsByTitle, "A/L Chemistry - Paper Class (Kandy)",
+                "TUITION_SEARCH_TOP_30D", PromotionStatus.EXPIRED, 60);
+
+        // Search Boost (TUITION_SEARCH_BOOST_30D) - target 5 active, real boosted listings only
+        // (never backfilled with placeholders - see SearchBoostSection on the frontend).
+        seedTuitionPromotion(tuitionAdsByTitle, "Spoken English Classes - Beginner to Advanced",
+                "TUITION_SEARCH_BOOST_30D", PromotionStatus.ACTIVE, 1);
+        seedTuitionPromotion(tuitionAdsByTitle, "A/L Physics - One-on-One Online Classes",
+                "TUITION_SEARCH_BOOST_30D", PromotionStatus.ACTIVE, 4);
+        // Started only 1 day ago (endsAt ~29 days out) versus this ad's own natural-expiry override
+        // of 25 days out (see applyTuitionExpirySamples) - deliberately extends ad.expiresAt,
+        // demonstrating the paid-duration expiry guarantee (extendExpiryToAtLeast).
+        seedTuitionPromotion(tuitionAdsByTitle, "O/L Science - Sinhala Medium Batch",
+                "TUITION_SEARCH_BOOST_30D", PromotionStatus.ACTIVE, 1);
+        seedTuitionPromotion(tuitionAdsByTitle, "IELTS Preparation - Band 7+ Target",
+                "TUITION_SEARCH_BOOST_30D", PromotionStatus.ACTIVE, 20);
+        seedTuitionPromotion(tuitionAdsByTitle, "O/L English - Individual & Group Options",
+                "TUITION_SEARCH_BOOST_30D", PromotionStatus.ACTIVE, 10);
+
+        // Search Page Spotlight (TUITION_SEARCH_SIDEBAR_TOP_30D) - target 6 active: more than the
+        // 4-visible desktop viewport.
+        seedTuitionPromotion(tuitionAdsByTitle, "Cambridge IGCSE Mathematics - Group & Online Batch",
+                "TUITION_SEARCH_SIDEBAR_TOP_30D", PromotionStatus.ACTIVE, 1);
+        seedTuitionPromotion(tuitionAdsByTitle, "A/L Chemistry - Paper Class (Kandy)",
+                "TUITION_SEARCH_SIDEBAR_TOP_30D", PromotionStatus.ACTIVE, 4);
+        seedTuitionPromotion(tuitionAdsByTitle, "Pearson Edexcel English Literature - AS Level (Online)",
+                "TUITION_SEARCH_SIDEBAR_TOP_30D", PromotionStatus.ACTIVE, 10);
+        seedTuitionPromotion(tuitionAdsByTitle, "Guitar Classes - Acoustic & Electric",
+                "TUITION_SEARCH_SIDEBAR_TOP_30D", PromotionStatus.ACTIVE, 20);
+        seedTuitionPromotion(tuitionAdsByTitle, "Kandyan Dancing Classes",
+                "TUITION_SEARCH_SIDEBAR_TOP_30D", PromotionStatus.ACTIVE, 1);
+        seedTuitionPromotion(tuitionAdsByTitle, "A/L ICT - O/L & A/L Combined Batch",
+                "TUITION_SEARCH_SIDEBAR_TOP_30D", PromotionStatus.ACTIVE, 4);
+
+        // Detail Page Featured (TUITION_DETAIL_TOP_30D) - target 2 active: sparse enough that the
+        // frontend must add placeholders to reach visibleCount+1.
+        seedTuitionPromotion(tuitionAdsByTitle, "O/L Mathematics - English Medium Group Classes",
+                "TUITION_DETAIL_TOP_30D", PromotionStatus.ACTIVE, 10);
+        // Started 1 day ago (endsAt ~29 days out) versus this ad's own 5-day renewal-window
+        // override (see applyTuitionExpirySamples) - a second, more dramatic expiry-extension
+        // example: expiry jumps from 5 days out to ~29 days out.
+        seedTuitionPromotion(tuitionAdsByTitle, "Primary English & Mathematics - Grade 3 to 5",
+                "TUITION_DETAIL_TOP_30D", PromotionStatus.ACTIVE, 1);
+
+        // Detail Page Spotlight (TUITION_DETAIL_RIGHT_30D) - target 1 active, single fixed
+        // placement (not a carousel).
+        seedTuitionPromotion(tuitionAdsByTitle, "O/L English - Individual & Group Options",
+                "TUITION_DETAIL_RIGHT_30D", PromotionStatus.ACTIVE, 1);
+
+        // Lifecycle variety (2 expired, 1 scheduled/future, 1 cancelled), layered onto ads already
+        // promoted above but each in a different slot - realistic (a tutor buying more than one
+        // product over time) and never disturbs the active counts targeted above. None of these
+        // are reachable from any public "active promotions" query.
+        seedTuitionPromotion(tuitionAdsByTitle, "Kandyan Dancing Classes",
+                "TUITION_HOME_FEATURED_30D", PromotionStatus.EXPIRED, 45);
+        seedTuitionPromotion(tuitionAdsByTitle, "Piano Lessons for Kids & Adults",
+                "TUITION_HOME_FEATURED_30D", PromotionStatus.SCHEDULED, -3);
+        seedTuitionPromotion(tuitionAdsByTitle, "Primary English & Mathematics - Grade 3 to 5",
+                "TUITION_DETAIL_RIGHT_30D", PromotionStatus.CANCELLED, 10);
+
+        int after = (int) promotions.count();
+        return new SeedResult("tuition-promotion-showcase", after - before, 0,
+                "Tuition promotion showcase seeded/verified across all 7 products "
+                        + "(created " + (after - before) + " new promotion rows this run).");
+    }
+
+    // Idempotent per ad+slot (any status - see existsByAdIdAndPlan_SlotAndStatusIn below), so
+    // seedTuitionPromotionShowcase can be re-run safely without ever creating a duplicate for the
+    // same ad+slot pair. `startedDaysAgo` may be negative to express a future/SCHEDULED start.
+    // Bypasses PromotionService entirely (same reasoning as activateSampleAdPromotion) so no real
+    // Payment row is required; paymentWaived=true keeps that consistent. Uses
+    // PromotionPricingService directly so the charged price reflects real, current campaign
+    // pricing instead of a hardcoded amount.
+    private void seedTuitionPromotion(Map<String, Ad> tuitionAdsByTitle, String adTitle, String planCode,
+            PromotionStatus status, int startedDaysAgo) {
+        Ad ad = tuitionAdsByTitle.get(adTitle);
+        if (ad == null) {
+            return;
+        }
+        PromotionPlan plan = promotionPlans.findByCode(planCode).orElse(null);
+        if (plan == null) {
+            return;
+        }
+        if (promotions.existsByAdIdAndPlan_SlotAndStatusIn(ad.getId(), plan.getSlot(), List.of(PromotionStatus.values()))) {
+            return;
+        }
+
+        BigDecimal chargedPrice = promotionPricing.resolve(plan, Instant.now()).effectivePrice();
+        Promotion promotion = promotions.save(new Promotion(
+                ad, ad.getSeller(), plan, chargedPrice, plan.getDurationDays(),
+                PromotionStatus.PENDING_PAYMENT, true));
+
+        Instant startsAt = Instant.now().minus(Duration.ofDays(startedDaysAgo));
+        Instant endsAt = startsAt.plus(Duration.ofDays(plan.getDurationDays()));
+        promotion.seedLifecycleOverride(status, startsAt, endsAt);
+
+        // Mirrors PromotionService's paid-duration guarantee for every status that was (or still
+        // is) genuinely live - same reasoning as activateSampleAdPromotion, applied by hand since
+        // this bypasses PromotionService entirely. A merely SCHEDULED (not yet started) or
+        // CANCELLED (never delivered) promotion never extends expiry, matching real semantics.
+        if ((status == PromotionStatus.ACTIVE || status == PromotionStatus.EXPIRED)
+                && ad.getSourceChannel() == SourceChannel.TUITION) {
+            ad.extendExpiryToAtLeast(endsAt);
+        }
     }
 
     private SeedResult seedAds(String group, List<AdSeed> seeds) {
@@ -1051,10 +1226,11 @@ public class SampleDataSeeder {
     // Representative ACTIVE promotions so the feature is visible without any manual setup: six
     // ads in HOME_FEATURED (more than its visibleCount of 4, so the carousel has a second page to
     // page through), one ad in each other ad-linked placement (including all three
-    // category-featured slots), two Tuition ads in TUITION_FEATURED plus one more in the generic
-    // TOP_SEARCH placement, and three active banners so the homepage banner carousel has more than
-    // one slide to rotate through. Most of the seeded ads stay unpromoted so ranking differences
-    // show.
+    // category-featured slots), and three active banners so the homepage banner carousel has more
+    // than one slide to rotate through. Most of the seeded ads stay unpromoted so ranking
+    // differences show. Tuition promotions are seeded separately and far more comprehensively by
+    // seedTuitionPromotionShowcase() - see its own idempotency notes for why it isn't folded into
+    // this method's coarse whole-table guard.
     private void seedSamplePromotionsIfMissing(Map<String, Ad> adsByTitle, Customer bannerAdvertiser) {
         if (promotions.count() > 0) {
             return;
@@ -1070,10 +1246,8 @@ public class SampleDataSeeder {
         activateSampleAdPromotion(adsByTitle.get("iPhone 15 Pro 256GB"), "TOP_SEARCH_7D");
         activateSampleAdPromotion(adsByTitle.get("Modern House for Sale in Nugegoda"), "PROPERTY_FEATURED_7D");
         activateSampleAdPromotion(adsByTitle.get("Bajaj Pulsar 150 2019"), "VEHICLES_FEATURED_7D");
-        activateSampleAdPromotion(adsByTitle.get("A/L Combined Mathematics - Theory & Revision"), "TUITION_HOME_FEATURED_30D");
-        activateSampleAdPromotion(adsByTitle.get("Spoken English Classes - Beginner to Advanced"), "TUITION_HOME_FEATURED_30D");
-        activateSampleAdPromotion(adsByTitle.get("O/L Mathematics - English Medium Group Classes"), "TUITION_SEARCH_TOP_30D");
-        activateSampleAdPromotion(adsByTitle.get("A/L Physics - One-on-One Online Classes"), "TUITION_SEARCH_SIDEBAR_TOP_30D");
+        // Tuition promotions are no longer seeded here - see seedTuitionPromotionShowcase() for
+        // the comprehensive, deterministic Tuition promotion dataset covering all 7 products.
 
         promotionPlans.findByCode("HOME_BANNER_7D").ifPresent(plan -> {
             addSampleBannerPromotion(bannerAdvertiser, plan, "banner-promote-business.svg");
@@ -1094,7 +1268,34 @@ public class SampleDataSeeder {
                     ad, ad.getSeller(), plan, plan.getPrice(), plan.getDurationDays(),
                     PromotionStatus.PENDING_PAYMENT, true));
             promotion.activate();
+            // Mirrors PromotionService#activateWithCapacityCheck's paid-duration guarantee: since
+            // this path bypasses PromotionService entirely, apply the same protection by hand so
+            // sample data demonstrates the real invariant instead of a special-cased copy of it.
+            if (ad.getSourceChannel() == SourceChannel.TUITION) {
+                ad.extendExpiryToAtLeast(promotion.getEndsAt());
+            }
         });
+    }
+
+    // Curated expiry-state examples for the Tuition sample dataset (see CLAUDE.md "DEV sample
+    // data"): recomputed relative to "now" on every seed run rather than fixed at first insert, so
+    // the demo always looks fresh no matter how long the DB has existed. Deliberately separate from
+    // AdSeed/tuitionAdSeeds() - these are display-state overrides on top of already-approved ads,
+    // not a new ad shape.
+    private void applyTuitionExpirySamples(Map<String, Ad> tuitionAdsByTitle) {
+        // ACTIVE, comfortably far from expiry.
+        adjustSampleExpiry(tuitionAdsByTitle.get("O/L Science - Sinhala Medium Batch"), 25, AdStatus.ACTIVE);
+        // ACTIVE, inside the 7-day renewal window - exercises the "Renew" action in My Classes.
+        adjustSampleExpiry(tuitionAdsByTitle.get("Primary English & Mathematics - Grade 3 to 5"), 5, AdStatus.ACTIVE);
+        // Already EXPIRED - exercises the EXPIRED My Classes state and the renewal flow from expired.
+        adjustSampleExpiry(tuitionAdsByTitle.get("Japanese Language Classes - Beginner to Intermediate"), -3, AdStatus.EXPIRED);
+    }
+
+    private void adjustSampleExpiry(Ad ad, int daysFromNow, AdStatus status) {
+        if (ad == null || ad.getStatus() == AdStatus.PENDING_REVIEW || ad.getStatus() == AdStatus.REJECTED) {
+            return;
+        }
+        ad.seedExpiryOverride(Instant.now().plus(Duration.ofDays(daysFromNow)), status);
     }
 
     private void addSampleBannerPromotion(Customer advertiser, PromotionPlan plan, String resourceFilename) {

@@ -194,6 +194,32 @@ class PromotionPricingServiceTest {
         assertEquals(0, new BigDecimal("500.00").compareTo(halfPricing.discountAmount()));
     }
 
+    // --- ezClass free launch campaign (PERCENTAGE_DISCOUNT 100%, Rs. 0 minimum, see V27) ----------
+
+    @Test
+    void hundredPercentDiscountCampaignMakesEachOfTheSevenTuitionProductsFree() {
+        PromotionCampaign freeLaunch = percentageCampaign(
+                "100.00", "0.00", NOW.minus(1, ChronoUnit.DAYS), NOW.plus(90, ChronoUnit.DAYS));
+
+        assertFreePrice(freeLaunch, "TUITION_SEARCH_TOP_30D", "3490.00");
+        assertFreePrice(freeLaunch, "TUITION_SEARCH_BOOST_30D", "2990.00");
+        assertFreePrice(freeLaunch, "TUITION_SEARCH_SIDEBAR_TOP_30D", "2490.00");
+        assertFreePrice(freeLaunch, "TUITION_HOME_FEATURED_30D", "2490.00");
+        assertFreePrice(freeLaunch, "TUITION_DETAIL_TOP_30D", "1990.00");
+        assertFreePrice(freeLaunch, "TUITION_HOME_LATEST_RIGHT_30D", "1490.00");
+        assertFreePrice(freeLaunch, "TUITION_DETAIL_RIGHT_30D", "1490.00");
+    }
+
+    private void assertFreePrice(PromotionCampaign campaign, String planCode, String basePrice) {
+        PromotionPricingService service = serviceReturning(campaign);
+        PromotionPricing pricing = service.resolve(tuitionPlan(planCode, basePrice), NOW);
+        assertEquals(0, new BigDecimal(basePrice).compareTo(pricing.basePrice()), "base price must be unchanged");
+        assertEquals(0, BigDecimal.ZERO.compareTo(pricing.effectivePrice()), () -> planCode + " must resolve to Rs. 0");
+        assertTrue(pricing.discounted());
+        assertEquals(0, new BigDecimal(basePrice).compareTo(pricing.discountAmount()));
+        assertEquals(campaign.getCode(), pricing.campaignCode());
+    }
+
     // --- normal pricing fallback -------------------------------------------------------------------
 
     @Test

@@ -66,8 +66,8 @@ export function RegisterPage() {
     <div className="auth-page container">
       <Seo title="Register" noindex />
       <div className="auth-card">
-        <h1 className="auth-card__title">Create your CeylonAds account</h1>
-        <p className="auth-card__subtitle">One account for tuition, and the whole CeylonAds marketplace.</p>
+        <h1 className="auth-card__title">Create your ezClass account</h1>
+        <p className="auth-card__subtitle">Create an account to post and manage your classes.</p>
 
         {error && (
           <p className="auth-card__error" role="alert">
@@ -142,7 +142,7 @@ export function RegisterPage() {
             />
           </div>
 
-          <button type="submit" className="btn btn-primary btn-block" disabled={submitting}>
+          <button type="submit" className="btn btn-accent btn-block" disabled={submitting}>
             {submitting ? "Creating account…" : "Create account"}
           </button>
         </form>
