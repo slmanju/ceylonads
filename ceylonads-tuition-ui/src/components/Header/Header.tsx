@@ -5,7 +5,7 @@ import { useAuth } from "../../auth/AuthContext";
 import "./Header.css";
 
 export function Header() {
-  const { isAuthenticated, username, logout } = useAuth();
+  const { isAuthenticated, username, role, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -45,6 +45,11 @@ export function Header() {
                 <NavLink to="/my-ads" className="tuition-header__link" onClick={closeMenu}>
                   My Classes
                 </NavLink>
+                {role === "ADMIN" && (
+                  <NavLink to="/admin/tuition" className="tuition-header__link" onClick={closeMenu}>
+                    Tuition Admin
+                  </NavLink>
+                )}
                 <NavLink to="/account" className="tuition-header__link tuition-header__account" onClick={closeMenu}>
                   <FaUserCircle aria-hidden="true" />
                   {username}

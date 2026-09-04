@@ -1,0 +1,152 @@
+.tuition-admin-review__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.88rem;
+  margin-bottom: 16px;
+}
+
+.tuition-admin-review__error {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: #fdecea;
+  color: var(--color-danger);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+}
+
+.tuition-admin-review__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 28px;
+}
+
+.tuition-admin-review__status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--color-neutral-soft);
+  color: var(--color-text-muted);
+  margin-bottom: 10px;
+}
+
+.tuition-admin-review__status--pending_review {
+  background: var(--color-accent-light);
+  color: var(--color-accent-dark);
+}
+
+.tuition-admin-review__status--active {
+  background: #e6f4ee;
+  color: var(--color-success);
+}
+
+.tuition-admin-review__status--rejected {
+  background: #fdecea;
+  color: var(--color-danger);
+}
+
+.tuition-admin-review__price {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.tuition-admin-review__title {
+  font-size: 1.4rem;
+  color: var(--color-text-strong);
+  margin: 6px 0 12px;
+}
+
+.tuition-admin-review__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  margin-bottom: 18px;
+}
+
+.tuition-admin-review__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tuition-admin-review__details h2,
+.tuition-admin-review__description h2 {
+  font-size: 1rem;
+  color: var(--color-text-strong);
+  margin-bottom: 8px;
+}
+
+.tuition-admin-review__details dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin-bottom: 20px;
+}
+
+.tuition-admin-review__details dt {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.tuition-admin-review__details dd {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.tuition-admin-review__contact {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  background: var(--color-surface-soft);
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+}
+
+.tuition-admin-review__contact-icon {
+  font-size: 1.8rem;
+  color: var(--color-text-subtle);
+}
+
+.tuition-admin-review__contact-label {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.tuition-admin-review__contact-name {
+  font-weight: 600;
+  color: var(--color-text-strong);
+}
+
+.tuition-admin-review__contact-phone {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+
+.tuition-admin-review__description p {
+  color: var(--color-text);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.tuition-admin-review__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+@media (max-width: 780px) {
+  .tuition-admin-review__layout {
+    grid-template-columns: 1fr;
+  }
+}

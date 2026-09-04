@@ -1,0 +1,138 @@
+.tuition-admin-campaign-form {
+  max-width: 640px;
+}
+
+.tuition-admin-campaign-form__back {
+  display: inline-block;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.88rem;
+  margin-bottom: 16px;
+}
+
+.tuition-admin-campaign-form h1 {
+  font-size: 1.4rem;
+  color: var(--color-text-strong);
+  margin-bottom: 20px;
+}
+
+.tuition-admin-campaign-form__error {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: #fdecea;
+  color: var(--color-danger);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+}
+
+.tuition-admin-campaign-form__readonly-banner {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: var(--color-neutral-soft);
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+}
+
+.tuition-admin-campaign-form__fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tuition-admin-campaign-form__fieldset:disabled .tuition-admin-campaign-form__form {
+  opacity: 0.75;
+}
+
+.tuition-admin-campaign-form__plan-historical {
+  color: var(--color-text-subtle);
+  font-style: italic;
+}
+
+.tuition-admin-campaign-form__form {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tuition-admin-campaign-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tuition-admin-campaign-form__field input,
+.tuition-admin-campaign-form__field textarea {
+  width: 100%;
+  font-family: inherit;
+}
+
+.tuition-admin-campaign-form__hint {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.tuition-admin-campaign-form__radios {
+  display: flex;
+  gap: 20px;
+  font-size: 0.9rem;
+}
+
+.tuition-admin-campaign-form__radios label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tuition-admin-campaign-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.tuition-admin-campaign-form__plans {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
+.tuition-admin-campaign-form__plan-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+}
+
+.tuition-admin-campaign-form__inline-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.tuition-admin-campaign-form__section {
+  border-top: 1px solid var(--color-border);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tuition-admin-campaign-form__section h2 {
+  font-size: 0.95rem;
+  color: var(--color-text-strong);
+}
+
+.tuition-admin-campaign-form__actions {
+  margin-top: 8px;
+}

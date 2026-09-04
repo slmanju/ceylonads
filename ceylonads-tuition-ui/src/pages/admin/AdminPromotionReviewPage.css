@@ -1,0 +1,98 @@
+.tuition-admin-promo-review__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.88rem;
+  margin-bottom: 16px;
+}
+
+.tuition-admin-promo-review__error {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: #fdecea;
+  color: var(--color-danger);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+}
+
+.tuition-admin-promo-review__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 28px;
+}
+
+.tuition-admin-promo-review__info h1 {
+  font-size: 1.4rem;
+  color: var(--color-text-strong);
+  margin: 6px 0 16px;
+}
+
+.tuition-admin-promo-review__status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--color-neutral-soft);
+  color: var(--color-text-muted);
+}
+
+.tuition-admin-promo-review__status--pending_payment,
+.tuition-admin-promo-review__status--pending_approval {
+  background: var(--color-accent-light);
+  color: var(--color-accent-dark);
+}
+
+.tuition-admin-promo-review__status--active {
+  background: #e6f4ee;
+  color: var(--color-success);
+}
+
+.tuition-admin-promo-review__status--cancelled {
+  background: #fdecea;
+  color: var(--color-danger);
+}
+
+.tuition-admin-promo-review__details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 16px;
+  margin-bottom: 20px;
+}
+
+.tuition-admin-promo-review__details dt {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.tuition-admin-promo-review__details dd {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.tuition-admin-promo-review__description h2 {
+  font-size: 1rem;
+  color: var(--color-text-strong);
+  margin-bottom: 8px;
+}
+
+.tuition-admin-promo-review__description p {
+  color: var(--color-text);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.tuition-admin-promo-review__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+@media (max-width: 780px) {
+  .tuition-admin-promo-review__layout {
+    grid-template-columns: 1fr;
+  }
+}

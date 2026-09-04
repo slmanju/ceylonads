@@ -254,10 +254,17 @@ public class AdService {
     // /api/moderation/ads/** endpoint as the ADMIN cross-channel case above.
     @Transactional(readOnly = true)
     public List<AdResponse> pendingReview(SourceChannel restrictToChannel) {
-        List<Ad> pending = restrictToChannel == null
-                ? ads.findByStatusOrderByCreatedAtAsc(AdStatus.PENDING_REVIEW)
-                : ads.findByStatusAndSourceChannelOrderByCreatedAtAsc(AdStatus.PENDING_REVIEW, restrictToChannel);
-        return toResponses(pending, false);
+        return listByStatus(AdStatus.PENDING_REVIEW, restrictToChannel);
+    }
+
+    // Generalized form of pendingReview above, for the Tuition admin console's Classes tabs
+    // (Pending/Active/Rejected/Expired) - any status, same channel-restriction shape.
+    @Transactional(readOnly = true)
+    public List<AdResponse> listByStatus(AdStatus status, SourceChannel restrictToChannel) {
+        List<Ad> found = restrictToChannel == null
+                ? ads.findByStatusOrderByCreatedAtAsc(status)
+                : ads.findByStatusAndSourceChannelOrderByCreatedAtAsc(status, restrictToChannel);
+        return toResponses(found, false);
     }
 
     // Open to any moderator/admin, including the ad's own creator - self-approval is an
@@ -287,6 +294,14 @@ public class AdService {
         Ad ad = requireAny(id, restrictToChannel);
         ad.reject(requireAccountId(reviewerUsername));
         return toSingleResponse(ad, false);
+    }
+
+    // Admin detail read for a specific channel (e.g. the Tuition admin's pending-class review
+    // view) - same requireAny channel guard as approve/reject/adminDeactivate below, so a caller
+    // restricted to one channel 404s (not leaks) on an id from another channel.
+    @Transactional(readOnly = true)
+    public AdResponse getForAdmin(Long id, SourceChannel restrictToChannel) {
+        return toSingleResponse(requireAny(id, restrictToChannel), false);
     }
 
     @Transactional

@@ -407,6 +407,57 @@ public class PromotionService {
         return mapper.toResponse(promotion);
     }
 
+    // --- Channel-scoped admin surface (Tuition admin console) -------------------------------
+    // Additive overloads only - every method above is untouched and keeps serving the
+    // cross-channel MAIN_SITE admin UI exactly as before. restrictToChannel is always resolved
+    // to a fixed SourceChannel.TUITION by AdminTuitionPromotionController, never derived from the
+    // caller's role, mirroring AdService.approve(id, username, restrictToChannel)/
+    // ModerationController's restrictToChannel pattern.
+
+    @Transactional
+    public List<PromotionResponse> adminList(PromotionStatus statusFilter, SourceChannel restrictToChannel) {
+        if (restrictToChannel == null) {
+            return adminList(statusFilter);
+        }
+        expireOverdue();
+        List<Promotion> results = statusFilter == null
+                ? promotions.findByPlan_Slot_SourceChannelOrderByCreatedAtDesc(restrictToChannel)
+                : promotions.findByStatusAndPlan_Slot_SourceChannelOrderByCreatedAtDesc(statusFilter, restrictToChannel);
+        return results.stream().map(mapper::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public PromotionResponse adminGet(Long id, SourceChannel restrictToChannel) {
+        return mapper.toResponse(requireAny(id, restrictToChannel));
+    }
+
+    // Same capacity-checked activation as adminApprove(id) above; restrictToChannel only narrows
+    // which promotion ids this caller may reach (404, never leaking cross-channel existence - same
+    // shape as AdService.requireAny/requireOwned).
+    @Transactional
+    public PromotionResponse adminApprove(Long id, SourceChannel restrictToChannel) {
+        Promotion promotion = requireAny(id, restrictToChannel);
+        if (promotion.getStatus() != PromotionStatus.PENDING_APPROVAL) {
+            throw new BadRequestException("Only promotions pending approval can be approved");
+        }
+        if (promotion.getKind() == PromotionKind.AD_PROMOTION
+                && promotion.getAd().getStatus() != AdStatus.ACTIVE) {
+            throw new BadRequestException("The ad for this promotion is no longer active");
+        }
+        activateWithCapacityCheck(promotion);
+        return mapper.toResponse(promotion);
+    }
+
+    @Transactional
+    public PromotionResponse adminCancel(Long id, SourceChannel restrictToChannel) {
+        Promotion promotion = requireAny(id, restrictToChannel);
+        if (!ADMIN_CANCELLABLE_STATUSES.contains(promotion.getStatus())) {
+            throw new BadRequestException("This promotion cannot be cancelled");
+        }
+        promotion.cancel();
+        return mapper.toResponse(promotion);
+    }
+
     @Transactional
     public void expireOverdue() {
         promotions.expireOverdue(Instant.now());
@@ -631,5 +682,15 @@ public class PromotionService {
 
     private Promotion requireAny(Long id) {
         return promotions.findById(id).orElseThrow(() -> new NotFoundException("Promotion not found"));
+    }
+
+    // restrictToChannel non-null: 404s (never leaks that the promotion exists in another channel)
+    // when its plan's slot doesn't belong to that channel - same shape as AdService.requireAny.
+    private Promotion requireAny(Long id, SourceChannel restrictToChannel) {
+        Promotion promotion = requireAny(id);
+        if (restrictToChannel != null && promotion.getPlan().getSlot().getSourceChannel() != restrictToChannel) {
+            throw new NotFoundException("Promotion not found");
+        }
+        return promotion;
     }
 }

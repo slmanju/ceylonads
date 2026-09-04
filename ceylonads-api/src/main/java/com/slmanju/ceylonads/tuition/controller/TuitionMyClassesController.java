@@ -28,7 +28,7 @@ public class TuitionMyClassesController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR', 'ADMIN')")
     @Operation(summary = "List my tuition classes, including non-public statuses", description =
             "The authenticated seller's own TUITION listings only - never their MAIN_SITE/BOARDING ads. "
                     + "Generic /api/ads/mine is unaffected and continues to return a seller's ads across every channel.")

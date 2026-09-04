@@ -1,0 +1,78 @@
+.tuition-admin-plan-form {
+  max-width: 560px;
+}
+
+.tuition-admin-plan-form__back {
+  display: inline-block;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.88rem;
+  margin-bottom: 16px;
+}
+
+.tuition-admin-plan-form h1 {
+  font-size: 1.4rem;
+  color: var(--color-text-strong);
+  margin-bottom: 20px;
+}
+
+.tuition-admin-plan-form__error {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: #fdecea;
+  color: var(--color-danger);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+}
+
+.tuition-admin-plan-form__form {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tuition-admin-plan-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tuition-admin-plan-form__field input,
+.tuition-admin-plan-form__field select,
+.tuition-admin-plan-form__field textarea {
+  width: 100%;
+  font-family: inherit;
+}
+
+.tuition-admin-plan-form__hint {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.tuition-admin-plan-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.tuition-admin-plan-form__checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.tuition-admin-plan-form__checkboxes label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tuition-admin-plan-form__actions {
+  margin-top: 8px;
+}

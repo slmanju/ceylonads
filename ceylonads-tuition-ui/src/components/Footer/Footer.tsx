@@ -27,6 +27,12 @@ export function Footer() {
         </div>
 
         <div className="tuition-footer__col">
+          <p className="tuition-footer__heading">Support</p>
+          <Link to="/contact">Contact Us</Link>
+          <Link to="/suggest">Suggestion / Feedback</Link>
+        </div>
+
+        <div className="tuition-footer__col">
           <p className="tuition-footer__heading">Legal</p>
           <span className="tuition-footer__static">Terms of use</span>
           <span className="tuition-footer__static">Privacy policy</span>

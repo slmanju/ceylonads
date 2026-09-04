@@ -27,7 +27,7 @@ import java.util.List;
 // PromotionService#createForTuitionAd/#compatiblePlansForTuitionAd.
 @RestController
 @RequestMapping("/api/tuition/my-classes/{adId}")
-@PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR')")
+@PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR', 'ADMIN')")
 @SecurityRequirement(name = "bearerAuth")
 public class TuitionMyClassPromotionController {
 

@@ -1,0 +1,98 @@
+.tuition-admin-suggestions h1 {
+  font-size: 1.4rem;
+  color: var(--color-text-strong);
+  margin-bottom: 20px;
+}
+
+.tuition-admin-suggestions__error {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: #fdecea;
+  color: var(--color-danger);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+}
+
+.tuition-admin-suggestions__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tuition-admin-suggestion {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.tuition-admin-suggestion__row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.tuition-admin-suggestion__status {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--color-neutral-soft);
+  color: var(--color-text-muted);
+}
+
+.tuition-admin-suggestion__status--new {
+  background: var(--color-accent-light);
+  color: var(--color-accent-dark);
+}
+
+.tuition-admin-suggestion__status--reviewed {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.tuition-admin-suggestion__status--closed {
+  background: var(--color-neutral-soft);
+  color: var(--color-text-subtle);
+}
+
+.tuition-admin-suggestion__preview {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.tuition-admin-suggestion__date {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-subtle);
+}
+
+.tuition-admin-suggestion__detail {
+  padding: 0 18px 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.tuition-admin-suggestion__message {
+  margin: 12px 0;
+  color: var(--color-text);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.tuition-admin-suggestion__actions {
+  display: flex;
+  gap: 10px;
+}

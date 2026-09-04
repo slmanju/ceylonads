@@ -1,0 +1,75 @@
+.tuition-admin-pending h1 {
+  font-size: 1.4rem;
+  color: var(--color-text-strong);
+  margin-bottom: 20px;
+}
+
+.tuition-admin-pending__tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 20px;
+}
+
+.tuition-admin-pending__tab {
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.tuition-admin-pending__tab--active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-accent);
+  font-weight: 600;
+}
+
+.tuition-admin-pending__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tuition-admin-pending__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.tuition-admin-pending__row:hover {
+  border-color: var(--color-accent);
+}
+
+.tuition-admin-pending__main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.tuition-admin-pending__title {
+  font-weight: 600;
+  color: var(--color-text-strong);
+}
+
+.tuition-admin-pending__meta {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.tuition-admin-pending__date {
+  font-size: 0.8rem;
+  color: var(--color-text-subtle);
+  white-space: nowrap;
+}

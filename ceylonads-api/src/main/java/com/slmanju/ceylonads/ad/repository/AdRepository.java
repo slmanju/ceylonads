@@ -90,4 +90,8 @@ public interface AdRepository extends JpaRepository<Ad, Long>, JpaSpecificationE
             + "where a.status = com.slmanju.ceylonads.ad.entity.AdStatus.ACTIVE and a.sourceChannel = :sourceChannel "
             + "and a.expiresAt is not null and a.expiresAt <= :now")
     int expireOverdue(@Param("sourceChannel") SourceChannel sourceChannel, @Param("now") Instant now);
+
+    // Tuition admin dashboard's summary cards (Pending/Active/Expired Classes) - channel-scoped
+    // counts, same restriction shape as findByStatusAndSourceChannelOrderByCreatedAtAsc above.
+    long countByStatusAndSourceChannel(AdStatus status, SourceChannel sourceChannel);
 }

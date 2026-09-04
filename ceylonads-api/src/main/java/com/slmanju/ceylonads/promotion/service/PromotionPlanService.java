@@ -1,5 +1,6 @@
 package com.slmanju.ceylonads.promotion.service;
 
+import com.slmanju.ceylonads.ad.entity.SourceChannel;
 import com.slmanju.ceylonads.common.exception.BadRequestException;
 import com.slmanju.ceylonads.common.exception.NotFoundException;
 import com.slmanju.ceylonads.promotion.dto.AdminPromotionPlanRequest;
@@ -95,5 +96,52 @@ public class PromotionPlanService {
     @Transactional(readOnly = true)
     public PromotionPlan requirePlan(Long id) {
         return plans.findById(id).orElseThrow(() -> new NotFoundException("Promotion plan not found"));
+    }
+
+    // --- Channel-scoped admin surface (Tuition admin console) -------------------------------
+    // Additive overloads only - every method above stays untouched and keeps serving the
+    // cross-channel MAIN_SITE admin UI exactly as before.
+
+    @Transactional(readOnly = true)
+    public List<PromotionPlanResponse> allPlans(SourceChannel restrictToChannel) {
+        if (restrictToChannel == null) {
+            return allPlans();
+        }
+        return plans.findBySlot_SourceChannelOrderByDisplayOrderAscIdAsc(restrictToChannel).stream()
+                .map(mapper::toResponse).toList();
+    }
+
+    @Transactional
+    public PromotionPlanResponse create(AdminPromotionPlanRequest request, SourceChannel restrictToChannel) {
+        if (restrictToChannel != null) {
+            PromotionSlot slot = slotService.requireSlot(request.slotId());
+            if (slot.getSourceChannel() != restrictToChannel) {
+                throw new BadRequestException("Selected placement does not belong to the " + restrictToChannel + " channel");
+            }
+        }
+        return create(request);
+    }
+
+    @Transactional
+    public PromotionPlanResponse update(Long id, AdminPromotionPlanUpdateRequest request, SourceChannel restrictToChannel) {
+        requireChannelMatch(id, restrictToChannel);
+        return update(id, request);
+    }
+
+    @Transactional
+    public PromotionPlanResponse setActive(Long id, boolean active, SourceChannel restrictToChannel) {
+        requireChannelMatch(id, restrictToChannel);
+        return setActive(id, active);
+    }
+
+    // 404s (never leaks that the plan exists in another channel) - same shape as
+    // AdService.requireAny/requireOwned.
+    private void requireChannelMatch(Long id, SourceChannel restrictToChannel) {
+        if (restrictToChannel == null) {
+            return;
+        }
+        if (requirePlan(id).getSlot().getSourceChannel() != restrictToChannel) {
+            throw new NotFoundException("Promotion plan not found");
+        }
     }
 }

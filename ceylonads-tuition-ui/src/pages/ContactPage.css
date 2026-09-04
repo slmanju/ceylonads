@@ -1,0 +1,36 @@
+.contact-page {
+  display: flex;
+  justify-content: center;
+  padding: 48px 20px;
+}
+
+.contact-card {
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 40px 32px;
+  box-shadow: var(--shadow-sm);
+}
+
+.contact-card__title {
+  font-size: 1.6rem;
+  color: var(--color-text-strong);
+}
+
+.contact-card__subtitle {
+  margin-top: 10px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.contact-card__whatsapp {
+  margin-top: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1.05rem;
+}

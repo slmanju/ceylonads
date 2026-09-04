@@ -94,7 +94,7 @@ public class TuitionClassController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Create a tuition class; new classes enter pending review", description =
             "categorySlug must be education-tuition or one of its direct child categories. Always creates a "
@@ -104,7 +104,7 @@ public class TuitionClassController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Update one of my tuition classes; edited classes return to pending review", description =
             "404s if the ad isn't yours or isn't a TUITION listing. The class's TUITION channel is always "
@@ -118,7 +118,7 @@ public class TuitionClassController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Deactivate one of my tuition classes", description =
             "Same semantics as the generic ad deactivate: a status change to DEACTIVATED, not a hard delete. "
@@ -129,7 +129,7 @@ public class TuitionClassController {
     }
 
     @PostMapping("/{id}/renew")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Renew one of my tuition classes", description =
             "Eligible only when the class is EXPIRED, or ACTIVE and expiring within 7 days - prevents stacking "

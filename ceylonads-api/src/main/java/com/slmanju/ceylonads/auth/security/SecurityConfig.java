@@ -95,6 +95,11 @@ public class SecurityConfig {
                         // TuitionSitemapController). Scoped to GET only and to this exact path -
                         // never broadened to /tuition/** (that prefix has no other public routes).
                         .requestMatchers(HttpMethod.GET, "/tuition/sitemap.xml").permitAll()
+                        // Public "Suggest" page - no login required to submit feedback. GET
+                        // /api/tuition/** is already permitAll below; this adds the one POST that
+                        // also needs to be public (list/review of suggestions stays admin-only
+                        // under /api/admin/tuition/suggestions/**).
+                        .requestMatchers(HttpMethod.POST, "/api/tuition/suggestions").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/ads/**",
                                 "/api/tuition/**",

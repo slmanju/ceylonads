@@ -1,5 +1,6 @@
 package com.slmanju.ceylonads.promotion.service;
 
+import com.slmanju.ceylonads.ad.entity.SourceChannel;
 import com.slmanju.ceylonads.category.entity.Category;
 import com.slmanju.ceylonads.category.repository.CategoryRepository;
 import com.slmanju.ceylonads.common.exception.BadRequestException;
@@ -63,6 +64,17 @@ public class PromotionSlotService {
     @Transactional(readOnly = true)
     public List<PromotionSlotResponse> allSlots() {
         return slots.findAllByOrderByDisplayOrderAscIdAsc().stream().map(mapper::toResponse).toList();
+    }
+
+    // Tuition admin console's read-only slot picker (feeds the Promotion Plan create form) - no
+    // Tuition slot CRUD surface exists, only this list.
+    @Transactional(readOnly = true)
+    public List<PromotionSlotResponse> allSlots(SourceChannel restrictToChannel) {
+        if (restrictToChannel == null) {
+            return allSlots();
+        }
+        return slots.findBySourceChannelOrderByDisplayOrderAscIdAsc(restrictToChannel).stream()
+                .map(mapper::toResponse).toList();
     }
 
     @Transactional

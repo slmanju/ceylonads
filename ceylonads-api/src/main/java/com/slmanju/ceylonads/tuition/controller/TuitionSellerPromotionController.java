@@ -70,7 +70,7 @@ public class TuitionSellerPromotionController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Promote one of my active TUITION classes; starts out PENDING_PAYMENT or PENDING_APPROVAL",
             description = "The ad must belong to the authenticated caller and be a TUITION-channel listing, and the "
@@ -82,7 +82,7 @@ public class TuitionSellerPromotionController {
     }
 
     @GetMapping("/my")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "List my promotions on my TUITION listings",
             description = "Never includes promotions on the same account's MAIN_SITE or BOARDING listings.")
@@ -91,7 +91,7 @@ public class TuitionSellerPromotionController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "View one of my TUITION promotions",
             description = "404s if the promotion doesn't belong to the caller or isn't on a TUITION-channel ad.")

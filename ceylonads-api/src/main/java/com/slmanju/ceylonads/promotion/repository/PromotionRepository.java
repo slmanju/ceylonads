@@ -39,6 +39,20 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
     @EntityGraph(attributePaths = {"ad", "customer", "plan", "plan.slot", "bannerMedia"})
     List<Promotion> findAllByOrderByCreatedAtDesc();
 
+    // Tuition admin console's channel-scoped equivalents of the two methods above. Scoped via
+    // plan.slot.sourceChannel (not ad.sourceChannel): every Promotion has a non-null plan->slot,
+    // but ad is null for BANNER_PROMOTION, so this is the only path that works for both kinds.
+    @EntityGraph(attributePaths = {"ad", "customer", "plan", "plan.slot", "bannerMedia"})
+    List<Promotion> findByPlan_Slot_SourceChannelOrderByCreatedAtDesc(SourceChannel sourceChannel);
+
+    @EntityGraph(attributePaths = {"ad", "customer", "plan", "plan.slot", "bannerMedia"})
+    List<Promotion> findByStatusAndPlan_Slot_SourceChannelOrderByCreatedAtDesc(PromotionStatus status, SourceChannel sourceChannel);
+
+    // Tuition admin dashboard summary counts.
+    long countByStatusAndPlan_Slot_SourceChannel(PromotionStatus status, SourceChannel sourceChannel);
+
+    long countByStatusInAndPlan_Slot_SourceChannel(Collection<PromotionStatus> statuses, SourceChannel sourceChannel);
+
     boolean existsByAdIdAndPlan_SlotAndStatusIn(Long adId, PromotionSlot slot, Collection<PromotionStatus> statuses);
 
     // DEV-only: lets SampleDataSeeder find promotions on ads it's about to clean up (stale Tuition

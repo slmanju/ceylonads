@@ -92,7 +92,7 @@ public class AdController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Create an ad; new ads enter pending review")
     AdResponse create(Authentication authentication, @Valid @RequestBody CreateAdRequest request) {
@@ -100,7 +100,7 @@ public class AdController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Update one of my ads; edited ads return to pending review")
     AdResponse update(
@@ -112,7 +112,7 @@ public class AdController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Deactivate one of my ads")
     void deactivate(Authentication authentication, @PathVariable Long id) {
@@ -120,7 +120,7 @@ public class AdController {
     }
 
     @GetMapping("/mine")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MODERATOR', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "List my ads including non-public statuses")
     List<AdResponse> mine(Authentication authentication) {

@@ -1,0 +1,132 @@
+.tuition-admin-campaigns__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.tuition-admin-campaigns__header h1 {
+  font-size: 1.4rem;
+  color: var(--color-text-strong);
+}
+
+.tuition-admin-campaigns__tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 16px;
+}
+
+.tuition-admin-campaigns__tab {
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tuition-admin-campaigns__tab--active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-accent);
+  font-weight: 600;
+}
+
+.tuition-admin-campaigns__hint {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-bottom: 16px;
+}
+
+.tuition-admin-campaigns__view-only {
+  font-size: 0.82rem;
+  color: var(--color-text-subtle);
+  font-style: italic;
+}
+
+.tuition-admin-campaigns__error {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: #fdecea;
+  color: var(--color-danger);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+}
+
+.tuition-admin-campaigns__table-wrap {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+}
+
+.tuition-admin-campaigns__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.tuition-admin-campaigns__table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.tuition-admin-campaigns__table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.tuition-admin-campaigns__table tr:last-child td {
+  border-bottom: none;
+}
+
+.tuition-admin-campaigns__name {
+  font-weight: 600;
+  color: var(--color-text-strong);
+}
+
+.tuition-admin-campaigns__code {
+  font-size: 0.78rem;
+  color: var(--color-text-subtle);
+}
+
+.tuition-admin-campaigns__status {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: var(--color-neutral-soft);
+  color: var(--color-text-muted);
+}
+
+.tuition-admin-campaigns__status--current {
+  background: #e6f4ee;
+  color: var(--color-success);
+}
+
+.tuition-admin-campaigns__status--scheduled {
+  background: var(--color-accent-light);
+  color: var(--color-accent-dark);
+}
+
+.tuition-admin-campaigns__status--ended,
+.tuition-admin-campaigns__status--closed {
+  background: var(--color-neutral-soft);
+  color: var(--color-text-subtle);
+}
+
+.tuition-admin-campaigns__actions {
+  display: flex;
+  gap: 8px;
+}

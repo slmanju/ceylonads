@@ -319,12 +319,20 @@ export interface TuitionPromotionsResponse {
   sidebarBottom: TuitionPromotionResponse[];
 }
 
+export type PlacementType =
+  | "HOME_FEATURED"
+  | "HOME_BANNER"
+  | "CATEGORY_FEATURED"
+  | "CATEGORY_BANNER"
+  | "TOP_SEARCH"
+  | "AD_DETAIL_SIDEBAR";
+
 export interface PromotionPlanResponse {
   id: number;
   code: string;
   name: string;
   description: string;
-  placementType: string;
+  placementType: PlacementType;
   slotId: number;
   slotCode: string;
   slotName: string;
@@ -361,20 +369,34 @@ export interface CompatiblePromotionPlanResponse {
   remainingCapacity: number;
 }
 
-export type PromotionStatus = "PENDING_PAYMENT" | "PENDING_APPROVAL" | "ACTIVE" | "EXPIRED" | "CANCELLED";
+// SCHEDULED exists in the backend enum but is never actually assigned by PromotionService today -
+// included here only for type completeness.
+export type PromotionStatus = "PENDING_PAYMENT" | "PENDING_APPROVAL" | "SCHEDULED" | "ACTIVE" | "EXPIRED" | "CANCELLED";
+
+export type PromotionKind = "AD_PROMOTION" | "BANNER_PROMOTION";
 
 export interface PromotionResponse {
   id: number;
+  // kind/customerId/customerDisplayName/placementType/bannerMediaUrl/targetUrl/paymentWaived are
+  // only populated (and only needed) by the admin console - the seller-facing "my promotions"
+  // pages already know their own customer/plan/placement context.
+  kind?: PromotionKind;
   adId: number | null;
   adTitle: string | null;
+  customerId?: number;
+  customerDisplayName?: string;
   promotionPlanId: number;
   promotionPlanCode: string;
   promotionPlanName: string;
   slotId: number;
   slotCode: string;
+  placementType?: PlacementType;
+  bannerMediaUrl?: string | null;
+  targetUrl?: string | null;
   price: number;
   durationDays: number;
   paymentRequired: boolean;
+  paymentWaived?: boolean;
   status: PromotionStatus;
   createdAt: string;
   startsAt: string | null;
@@ -391,6 +413,161 @@ export interface TuitionCampaignResponse {
   ctaLabel: string;
   startsAt: string;
   endsAt: string;
+  showBanner: boolean;
+  showModal: boolean;
+}
+
+// POST /api/tuition/suggestions - public "Suggest" page submission. No response type: the
+// backend returns 201 with no body (see ceylonads-api's TuitionSuggestionController).
+export interface SuggestionCreateRequest {
+  name?: string;
+  email?: string;
+  phone?: string;
+  message: string;
+}
+
+export type SuggestionStatus = "NEW" | "REVIEWED" | "CLOSED";
+
+// Admin-only view of a suggestion (see ceylonads-api's TuitionSuggestionAdminResponse).
+export interface TuitionSuggestionAdmin {
+  id: number;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  message: string;
+  status: SuggestionStatus;
+  createdAt: string;
+  reviewedAt: string | null;
+  reviewedByAccountId: number | null;
+}
+
+// GET /api/admin/tuition/dashboard summary cards. currentPromotionPlans/currentCampaigns are
+// narrower than a plain active count - see TuitionPromotionCatalog on the backend.
+export interface TuitionAdminDashboardSummary {
+  pendingClasses: number;
+  activeClasses: number;
+  expiredClasses: number;
+  newSuggestions: number;
+  pendingPromotions: number;
+  activePromotions: number;
+  currentPromotionPlans: number;
+  currentCampaigns: number;
+}
+
+// --- Promotion admin console (see ceylonads-api's promotion.dto.* - shapes mirrored exactly) ---
+
+// Which slice of the Tuition promotion plan catalog to fetch - see
+// AdminTuitionPromotionPlanController on the backend. CURRENT (default) = the seven live ezClass
+// products; HISTORICAL = everything else (retired/test products kept for audit); ALL = both.
+export type TuitionCatalogScope = "CURRENT" | "HISTORICAL" | "ALL";
+// PlacementType/PromotionStatus/PromotionResponse/PromotionPlanResponse already exist above (the
+// same backend DTOs the seller-facing PricingPage/PromoteClassPage consume) - extended in place
+// with the admin-only fields (kind, customerId/customerDisplayName, paymentWaived, etc.) rather
+// than redeclared here, since it's the exact same Java record on the backend either way.
+
+export type PricingType = "FIXED_PRICE" | "PERCENTAGE_DISCOUNT";
+
+export interface PromotionSlotResponse {
+  id: number;
+  code: string;
+  name: string;
+  description: string;
+  placementType: PlacementType;
+  categoryId: number | null;
+  categorySlug: string | null;
+  categoryName: string | null;
+  sourceChannel: "MAIN_SITE" | "TUITION" | "BOARDING";
+  capacity: number;
+  visibleCount: number;
+  displayOrder: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PromotionCampaignResponse {
+  id: number;
+  code: string;
+  name: string;
+  description: string;
+  sourceChannel: "MAIN_SITE" | "TUITION" | "BOARDING";
+  pricingType: PricingType;
+  discountPercent: number | null;
+  fixedPrice: number | null;
+  minimumPrice: number | null;
+  active: boolean;
+  startsAt: string;
+  endsAt: string;
+  planIds: number[];
+  headline: string | null;
+  message: string | null;
+  ctaLabel: string | null;
+  customerVisible: boolean;
+  showBanner: boolean;
+  showModal: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// code/slotId are only meaningful on create - the plan admin form omits them entirely on edit.
+export interface AdminPromotionPlanRequest {
+  code: string;
+  name: string;
+  description: string;
+  slotId: number;
+  durationDays: number;
+  price: number;
+  paymentRequired?: boolean;
+  approvalRequired?: boolean;
+  displayOrder?: number;
+}
+
+export interface AdminPromotionPlanUpdateRequest {
+  name: string;
+  description: string;
+  price: number;
+  durationDays: number;
+  active: boolean;
+  paymentRequired?: boolean;
+  approvalRequired?: boolean;
+  displayOrder?: number;
+}
+
+// code/sourceChannel/pricingType are only meaningful on create - immutable after.
+export interface AdminPromotionCampaignRequest {
+  code: string;
+  name: string;
+  description: string;
+  sourceChannel: "MAIN_SITE" | "TUITION" | "BOARDING";
+  pricingType: PricingType;
+  discountPercent?: number;
+  fixedPrice?: number;
+  minimumPrice?: number;
+  startsAt: string;
+  endsAt: string;
+  planIds: number[];
+  headline?: string;
+  message?: string;
+  ctaLabel?: string;
+  customerVisible: boolean;
+  showBanner: boolean;
+  showModal: boolean;
+}
+
+export interface AdminPromotionCampaignUpdateRequest {
+  name: string;
+  description: string;
+  discountPercent?: number;
+  fixedPrice?: number;
+  minimumPrice?: number;
+  startsAt: string;
+  endsAt: string;
+  active: boolean;
+  planIds: number[];
+  headline?: string;
+  message?: string;
+  ctaLabel?: string;
+  customerVisible: boolean;
   showBanner: boolean;
   showModal: boolean;
 }

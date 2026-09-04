@@ -237,4 +237,62 @@ public class PromotionCampaignService {
     public PromotionCampaign requireCampaign(Long id) {
         return campaigns.findById(id).orElseThrow(() -> new NotFoundException("Promotion campaign not found"));
     }
+
+    // --- Channel-scoped admin surface (Tuition admin console) -------------------------------
+    // Additive overloads only - every method above stays untouched and keeps serving the
+    // cross-channel MAIN_SITE admin UI exactly as before. Overlap/pricing/date validation is
+    // entirely inherited by delegating to create/update/setActive above - never reimplemented.
+
+    @Transactional(readOnly = true)
+    public List<PromotionCampaignResponse> list(SourceChannel restrictToChannel) {
+        List<PromotionCampaign> results = restrictToChannel == null
+                ? campaigns.findAllByOrderByIdAsc()
+                : campaigns.findBySourceChannel(restrictToChannel);
+        return results.stream().map(mapper::toResponse).toList();
+    }
+
+    @Transactional
+    public PromotionCampaignResponse create(AdminPromotionCampaignRequest request, SourceChannel restrictToChannel) {
+        if (restrictToChannel != null) {
+            if (request.sourceChannel() != restrictToChannel) {
+                throw new BadRequestException("This admin console can only manage " + restrictToChannel + " campaigns");
+            }
+            requirePlansChannelMatch(request.planIds(), restrictToChannel);
+        }
+        return create(request);
+    }
+
+    @Transactional
+    public PromotionCampaignResponse update(Long id, AdminPromotionCampaignUpdateRequest request, SourceChannel restrictToChannel) {
+        requireChannelMatch(id, restrictToChannel);
+        if (restrictToChannel != null) {
+            requirePlansChannelMatch(request.planIds(), restrictToChannel);
+        }
+        return update(id, request);
+    }
+
+    @Transactional
+    public PromotionCampaignResponse setActive(Long id, boolean active, SourceChannel restrictToChannel) {
+        requireChannelMatch(id, restrictToChannel);
+        return setActive(id, active);
+    }
+
+    // 404s (never leaks that the campaign exists in another channel) - same shape as
+    // AdService.requireAny/requireOwned.
+    private void requireChannelMatch(Long id, SourceChannel restrictToChannel) {
+        if (restrictToChannel == null) {
+            return;
+        }
+        if (requireCampaign(id).getSourceChannel() != restrictToChannel) {
+            throw new NotFoundException("Promotion campaign not found");
+        }
+    }
+
+    private void requirePlansChannelMatch(List<Long> planIds, SourceChannel restrictToChannel) {
+        List<PromotionPlan> found = plans.findAllById(planIds);
+        boolean mismatch = found.stream().anyMatch(plan -> plan.getSlot().getSourceChannel() != restrictToChannel);
+        if (mismatch) {
+            throw new BadRequestException("All selected promotion plans must belong to the " + restrictToChannel + " channel");
+        }
+    }
 }

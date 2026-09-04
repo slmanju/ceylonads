@@ -1,5 +1,6 @@
 package com.slmanju.ceylonads.promotion.repository;
 
+import com.slmanju.ceylonads.ad.entity.SourceChannel;
 import com.slmanju.ceylonads.category.entity.Category;
 import com.slmanju.ceylonads.promotion.entity.PlacementType;
 import com.slmanju.ceylonads.promotion.entity.PromotionSlot;
@@ -32,4 +33,9 @@ public interface PromotionSlotRepository extends JpaRepository<PromotionSlot, Lo
     // Used to resolve the single well-known slot for a non-category-scoped placement (e.g.
     // SEARCH_TOP for TOP_SEARCH) without hard-coding its slot code.
     List<PromotionSlot> findByPlacementTypeAndCategoryIsNull(PlacementType placementType);
+
+    // Tuition admin console's read-only slot picker (feeds the Promotion Plan create form) - no
+    // Tuition slot CRUD UI exists, only this list.
+    @EntityGraph(attributePaths = "category")
+    List<PromotionSlot> findBySourceChannelOrderByDisplayOrderAscIdAsc(SourceChannel sourceChannel);
 }
