@@ -18,6 +18,13 @@ export function formatFullDate(isoDate: string | null): string {
   return new Date(isoDate).toLocaleDateString("en-LK", { year: "numeric", month: "short", day: "numeric" });
 }
 
+// Compact "Dec 10" form (no year) for space-constrained surfaces like the slim site-wide campaign
+// banner - see formatFullDate for the year-inclusive form used elsewhere.
+export function formatShortDate(isoDate: string | null): string {
+  if (!isoDate) return "";
+  return new Date(isoDate).toLocaleDateString("en-LK", { month: "short", day: "numeric" });
+}
+
 // Tuition-only listing expiry label (see AdResponse.expiresAt) - a shared helper so "Expires in N
 // days"/"Expired N days ago" date math isn't duplicated across My Classes and any other place that
 // shows a class's expiry. Returns null when there's nothing to show (no expiresAt, e.g. a

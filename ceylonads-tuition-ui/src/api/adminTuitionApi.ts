@@ -2,6 +2,7 @@ import { apiClient } from "./apiClient";
 import type {
   AdResponse,
   AdStatus,
+  PromotionResponse,
   SuggestionStatus,
   TuitionAdminDashboardSummary,
   TuitionSuggestionAdmin,
@@ -39,6 +40,14 @@ export async function approveTuitionAd(id: number | string): Promise<AdResponse>
 
 export async function rejectTuitionAd(id: number | string): Promise<AdResponse> {
   const { data } = await apiClient.patch<AdResponse>(`/api/admin/tuition/ads/${id}/reject`);
+  return data;
+}
+
+// Admin-initiated "Promote Class" - creates a real Promotion via the shared promotion domain and
+// activates it immediately (the admin's action here is itself the approval). Only the plan is
+// sent; price/duration/campaign/owner are all resolved server-side.
+export async function promoteTuitionAd(id: number | string, promotionPlanId: number): Promise<PromotionResponse> {
+  const { data } = await apiClient.post<PromotionResponse>(`/api/admin/tuition/ads/${id}/promotions`, { promotionPlanId });
   return data;
 }
 

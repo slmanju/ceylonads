@@ -6,16 +6,20 @@ import com.slmanju.ceylonads.ad.entity.SourceChannel;
 import com.slmanju.ceylonads.ad.repository.AdRepository;
 import com.slmanju.ceylonads.ad.service.AdService;
 import com.slmanju.ceylonads.admin.dto.AdminTuitionDashboardResponse;
+import com.slmanju.ceylonads.promotion.dto.PromoteTuitionClassRequest;
+import com.slmanju.ceylonads.promotion.dto.PromotionResponse;
 import com.slmanju.ceylonads.promotion.entity.PromotionCampaign;
 import com.slmanju.ceylonads.promotion.entity.PromotionStatus;
 import com.slmanju.ceylonads.promotion.repository.PromotionCampaignRepository;
 import com.slmanju.ceylonads.promotion.repository.PromotionPlanRepository;
 import com.slmanju.ceylonads.promotion.repository.PromotionRepository;
+import com.slmanju.ceylonads.promotion.service.PromotionService;
 import com.slmanju.ceylonads.tuition.TuitionPromotionCatalog;
 import com.slmanju.ceylonads.tuition.entity.SuggestionStatus;
 import com.slmanju.ceylonads.tuition.repository.TuitionSuggestionRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,17 +43,19 @@ public class AdminTuitionAdsController {
     private final PromotionRepository promotionRepository;
     private final PromotionPlanRepository promotionPlanRepository;
     private final PromotionCampaignRepository promotionCampaignRepository;
+    private final PromotionService promotionService;
 
     public AdminTuitionAdsController(
             AdService adService, AdRepository adRepository, TuitionSuggestionRepository suggestionRepository,
             PromotionRepository promotionRepository, PromotionPlanRepository promotionPlanRepository,
-            PromotionCampaignRepository promotionCampaignRepository) {
+            PromotionCampaignRepository promotionCampaignRepository, PromotionService promotionService) {
         this.adService = adService;
         this.adRepository = adRepository;
         this.suggestionRepository = suggestionRepository;
         this.promotionRepository = promotionRepository;
         this.promotionPlanRepository = promotionPlanRepository;
         this.promotionCampaignRepository = promotionCampaignRepository;
+        this.promotionService = promotionService;
     }
 
     @GetMapping("/pending")
@@ -82,6 +88,17 @@ public class AdminTuitionAdsController {
     @Operation(summary = "Reject a TUITION class", description = "The listing is not deleted; the owner still sees it (as REJECTED) in My Classes.")
     AdResponse reject(Authentication authentication, @PathVariable Long id) {
         return adService.reject(id, authentication.getName(), SourceChannel.TUITION);
+    }
+
+    @PostMapping("/ads/{id}/promotions")
+    @Operation(summary = "Admin-initiated promotion of a TUITION class ('Promote Class')", description =
+            "Creates a real Promotion via the same promotion domain the public purchase flow uses, and "
+                    + "activates it immediately - the admin's action here is itself the approval, so it never "
+                    + "lands in PENDING_PAYMENT/PENDING_APPROVAL first. Restricted to the current Tuition "
+                    + "promotion catalog; price/duration/campaign/owner are all resolved server-side from the "
+                    + "class and the selected plan, never accepted from the client.")
+    PromotionResponse promote(Authentication authentication, @PathVariable Long id, @Valid @RequestBody PromoteTuitionClassRequest request) {
+        return promotionService.createAdminPromotionForTuitionClass(id, request.promotionPlanId(), authentication.getName());
     }
 
     @GetMapping("/dashboard")

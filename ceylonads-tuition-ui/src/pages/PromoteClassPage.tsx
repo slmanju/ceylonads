@@ -3,14 +3,19 @@ import { Link, useParams } from "react-router-dom";
 import { FaCheckCircle, FaMapMarkerAlt } from "react-icons/fa";
 import { getMyAds } from "../api/adsApi";
 import { getCompatibleTuitionPromotionPlans, createTuitionPromotion, getMyPromotions } from "../api/promotionApi";
+import { useCampaign } from "../campaign/CampaignContext";
 import { LoadingState } from "../components/LoadingState/LoadingState";
 import { ErrorState } from "../components/ErrorState/ErrorState";
 import { EmptyState } from "../components/EmptyState/EmptyState";
 import { Seo } from "../components/Seo/Seo";
+import { PromotionPlanCard } from "../components/PromotionPlanCard/PromotionPlanCard";
 import type { AdResponse, CompatiblePromotionPlanResponse, PromotionResponse } from "../types/api";
 import { formatPrice, formatAdPrice, formatPromotionPrice } from "../utils/formatPrice";
 import { formatAdLocations } from "../utils/formatLocations";
+import { formatFullDate } from "../utils/formatDate";
 import { getApiErrorMessage } from "../utils/apiError";
+import { getPromotionDisplay, getPromotionDisplayName, sortByPromotionDisplayOrder } from "../utils/promotionDisplay";
+import { formatCampaignDurationLabel } from "../utils/campaignDuration";
 import "./PromoteClassPage.css";
 
 const LIVE_STATUSES = new Set(["PENDING_PAYMENT", "PENDING_APPROVAL", "ACTIVE"]);
@@ -21,6 +26,8 @@ const LIVE_STATUSES = new Set(["PENDING_PAYMENT", "PENDING_APPROVAL", "ACTIVE"])
 // PromoteAdPage drives, just channel-checked server-side to this tutor's own TUITION listing.
 export function PromoteClassPage() {
   const { id } = useParams<{ id: string }>();
+  const { campaign } = useCampaign();
+  const campaignDurationLabel = campaign ? formatCampaignDurationLabel(campaign.startsAt, campaign.endsAt) : null;
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -164,7 +171,9 @@ export function PromoteClassPage() {
           <ul className="promote-class-page__current-list">
             {livePromotions.map((promotion) => (
               <li key={promotion.id}>
-                <span className="promote-class-page__current-name">{promotion.promotionPlanName}</span>
+                <span className="promote-class-page__current-name">
+                  {getPromotionDisplayName(promotion.promotionPlanCode, promotion.promotionPlanName)}
+                </span>
                 <span className={`promote-class-page__current-status promote-class-page__current-status--${promotion.status.toLowerCase()}`}>
                   {promotion.status.replace("_", " ")}
                 </span>
@@ -182,44 +191,17 @@ export function PromoteClassPage() {
             <EmptyState title="No promotion plans are available right now." message="Please check back later." />
           ) : (
             <div className="promote-class-page__plans">
-              {plans.map(({ plan, available, remainingCapacity }) => (
-                <div key={plan.id} className="promotion-plan-card">
-                  <span className="promotion-plan-card__placement">{plan.slotName}</span>
-                  <p className="promotion-plan-card__name">{plan.name}</p>
-                  <p className="promotion-plan-card__description">{plan.description}</p>
-                  <p className="promotion-plan-card__duration">{plan.durationDays} days</p>
-                  <div className="promotion-plan-card__price-block">
-                    {plan.discounted ? (
-                      <>
-                        {plan.campaignName && (
-                          <span className="promotion-plan-card__offer-badge">{plan.campaignName}</span>
-                        )}
-                        <p className="promotion-plan-card__price promotion-plan-card__price--current">
-                          {formatPromotionPrice(plan.currentPrice)}
-                        </p>
-                        <p className="promotion-plan-card__price-normal">
-                          Normal <span className="promotion-plan-card__price-normal-amount">{formatPrice(plan.price)}</span>
-                        </p>
-                        <p className="promotion-plan-card__savings">Save {formatPrice(plan.discountAmount)}</p>
-                      </>
-                    ) : (
-                      <p className="promotion-plan-card__price">{formatPrice(plan.price)}</p>
-                    )}
-                  </div>
-                  <p className="promotion-plan-card__availability">
-                    {available
-                      ? `Availability: ${remainingCapacity} of ${plan.slotCapacity} slots available`
-                      : "Fully booked right now"}
-                  </p>
-                  <button
-                    type="button"
-                    className="btn btn-accent promotion-plan-card__select"
-                    disabled={!available}
-                    onClick={() => setSelectedPlan({ plan, available, remainingCapacity })}
-                  >
-                    {available ? "Select" : "Full"}
-                  </button>
-                </div>
+              {sortByPromotionDisplayOrder(plans, (p) => p.plan.code).map((compatiblePlan) => (
+                <PromotionPlanCard
+                  key={compatiblePlan.plan.id}
+                  plan={compatiblePlan.plan}
+                  available={compatiblePlan.available}
+                  ctaLabel="Select"
+                  unavailableCtaLabel="Full"
+                  unavailableLabel="Fully booked right now"
+                  onSelect={() => setSelectedPlan(compatiblePlan)}
+                  campaignDurationLabel={campaignDurationLabel}
+                />
               ))}
             </div>
           )}
@@ -239,14 +221,14 @@ export function PromoteClassPage() {
           <dl className="promote-class-page__confirm-details">
             <div>
               <dt>Plan</dt>
-              <dd>{selectedPlan.plan.name}</dd>
+              <dd>{getPromotionDisplay(selectedPlan.plan).displayName}</dd>
             </div>
             <div>
-              <dt>Placement</dt>
-              <dd>{selectedPlan.plan.slotName}</dd>
+              <dt>Where it appears</dt>
+              <dd>{getPromotionDisplay(selectedPlan.plan).whereItAppears}</dd>
             </div>
             <div>
-              <dt>Duration</dt>
+              <dt>Promotion duration</dt>
               <dd>{selectedPlan.plan.durationDays} days</dd>
             </div>
             <div>
@@ -262,6 +244,14 @@ export function PromoteClassPage() {
               </dd>
             </div>
           </dl>
+
+          {selectedPlan.plan.discounted && selectedPlan.plan.currentPrice === 0 && selectedPlan.plan.campaignEndsAt && (
+            <p className="promote-class-page__hint">
+              This free launch price is available for any promotion you request until{" "}
+              {formatFullDate(selectedPlan.plan.campaignEndsAt)}. Once it starts, your own promotion will still run
+              for its full {selectedPlan.plan.durationDays} days.
+            </p>
+          )}
 
           <p className="promote-class-page__hint">
             Your class will remain active for the full promotion period - if it's close to its own free-listing

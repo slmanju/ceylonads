@@ -75,6 +75,12 @@ public class Promotion {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
 
+    // Null except for a promotion created directly via the Tuition admin console's "Promote Class"
+    // action (see PromotionService#createAdminPromotionForTuitionClass) - distinguishes that path
+    // from a customer's own purchase/request, for audit purposes only.
+    @Column(name = "created_by_admin_username", length = 255)
+    private String createdByAdminUsername;
+
     protected Promotion() {
     }
 
@@ -133,6 +139,12 @@ public class Promotion {
     public Instant getEndsAt() { return endsAt; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+    public String getCreatedByAdminUsername() { return createdByAdminUsername; }
+
+    // Called once, right after construction, only by the admin-direct creation path.
+    public void markAdminCreated(String adminUsername) {
+        this.createdByAdminUsername = adminUsername;
+    }
 
     public void activate() {
         this.status = PromotionStatus.ACTIVE;

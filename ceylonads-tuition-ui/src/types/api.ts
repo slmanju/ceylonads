@@ -397,6 +397,9 @@ export interface PromotionResponse {
   durationDays: number;
   paymentRequired: boolean;
   paymentWaived?: boolean;
+  // Non-null only for a promotion created directly via the Tuition admin console's "Promote
+  // Class" action - null for a customer/tutor's own request.
+  createdByAdminUsername?: string | null;
   status: PromotionStatus;
   createdAt: string;
   startsAt: string | null;

@@ -4,13 +4,14 @@ import { FaArrowLeft, FaMapMarkerAlt, FaPhone, FaTag, FaUserCircle } from "react
 import { approveTuitionAd, getTuitionAd, rejectTuitionAd } from "../../api/adminTuitionApi";
 import { ImageGallery } from "../../components/ImageGallery/ImageGallery";
 import { ConfirmDialog } from "../../components/ConfirmDialog/ConfirmDialog";
+import { PromoteClassDialog } from "../../components/PromoteClassDialog/PromoteClassDialog";
 import { LoadingState } from "../../components/LoadingState/LoadingState";
 import { ErrorState } from "../../components/ErrorState/ErrorState";
 import { formatAdPrice } from "../../utils/formatPrice";
 import { formatAdLocations } from "../../utils/formatLocations";
 import { formatRelativeDate } from "../../utils/formatDate";
 import { getApiErrorMessage } from "../../utils/apiError";
-import type { AdResponse } from "../../types/api";
+import type { AdResponse, PromotionResponse } from "../../types/api";
 import "./AdminClassReviewPage.css";
 
 export function AdminClassReviewPage() {
@@ -23,6 +24,8 @@ export function AdminClassReviewPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [showReject, setShowReject] = useState(false);
+  const [showPromote, setShowPromote] = useState(false);
+  const [promotedMessage, setPromotedMessage] = useState<string | null>(null);
 
   const load = () => {
     if (!id) return;
@@ -65,6 +68,15 @@ export function AdminClassReviewPage() {
     }
   };
 
+  const handlePromoted = (promotion: PromotionResponse) => {
+    setShowPromote(false);
+    const until = promotion.endsAt
+      ? ` until ${new Date(promotion.endsAt).toLocaleDateString("en-LK", { year: "numeric", month: "short", day: "numeric" })}`
+      : "";
+    setPromotedMessage(`Class promoted successfully — ${promotion.promotionPlanName} is now active${until}.`);
+    load();
+  };
+
   if (loading) return <LoadingState label="Loading class…" />;
   if (error || !ad) return <ErrorState title="Class not found" message={error ?? "This class is unavailable."} />;
 
@@ -79,6 +91,8 @@ export function AdminClassReviewPage() {
           {actionError}
         </p>
       )}
+
+      {promotedMessage && <p className="tuition-admin-review__success">{promotedMessage}</p>}
 
       <div className="tuition-admin-review__layout">
         <div className="tuition-admin-review__gallery">
@@ -152,6 +166,14 @@ export function AdminClassReviewPage() {
               </button>
             </div>
           )}
+
+          {ad.status === "ACTIVE" && (
+            <div className="tuition-admin-review__actions">
+              <button type="button" className="btn btn-primary" onClick={() => setShowPromote(true)}>
+                Promote
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -164,6 +186,13 @@ export function AdminClassReviewPage() {
         loading={actionLoading}
         onConfirm={confirmReject}
         onCancel={() => setShowReject(false)}
+      />
+
+      <PromoteClassDialog
+        ad={ad}
+        open={showPromote}
+        onCancel={() => setShowPromote(false)}
+        onPromoted={handlePromoted}
       />
     </div>
   );

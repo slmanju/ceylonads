@@ -22,13 +22,21 @@
   justify-content: center;
 }
 
+.campaign-banner__eyebrow {
+  color: var(--color-accent-dark);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
 .campaign-banner__headline {
   color: var(--color-primary);
   font-size: 0.85rem;
   font-weight: 700;
 }
 
-.campaign-banner__message {
+.campaign-banner__until {
   color: var(--color-text-muted);
   font-size: 0.82rem;
 }
@@ -51,7 +59,7 @@
 }
 
 @media (max-width: 560px) {
-  .campaign-banner__message {
+  .campaign-banner__eyebrow {
     display: none;
   }
 }

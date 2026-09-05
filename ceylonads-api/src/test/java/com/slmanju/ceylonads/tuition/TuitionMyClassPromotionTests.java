@@ -112,15 +112,16 @@ class TuitionMyClassPromotionTests {
         long planId = planIdByCode(token, id, "TUITION_HOME_FEATURED_30D");
 
         // The real EZCLASS_LAUNCH_FREE launch campaign (live by default since V27) makes this plan
-        // free, so the purchase auto-activates immediately - no payment required, see
-        // PromotionService#resolveCreationPlan.
+        // free, but FREE only zeroes the price - a customer-initiated request still requires admin
+        // approval (see PromotionService#resolveCreationPlan), so this endpoint's own job (creating
+        // the request) is proven by PENDING_APPROVAL, not an immediate ACTIVE.
         mockMvc.perform(post("/api/tuition/my-classes/" + id + "/promotions")
                         .header("Authorization", "Bearer " + token)
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(Map.of("promotionPlanId", planId))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.adId").value(id))
-                .andExpect(jsonPath("$.status").value("ACTIVE"));
+                .andExpect(jsonPath("$.status").value("PENDING_APPROVAL"));
     }
 
     @Test

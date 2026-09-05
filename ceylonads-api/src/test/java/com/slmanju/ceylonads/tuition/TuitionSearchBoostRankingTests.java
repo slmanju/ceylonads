@@ -197,10 +197,11 @@ class TuitionSearchBoostRankingTests {
     }
 
     // Buys and activates a TUITION_SEARCH_BOOST_30D promotion on the given ad (owned by "kamal" -
-    // see persistAd), returning the created promotion's id. The real EZCLASS_LAUNCH_FREE launch
-    // campaign (live by default since V27) makes this plan free, so it auto-activates on creation -
-    // the admin activation step is skipped when that's already happened rather than assuming the
-    // plan still requires payment.
+    // see persistAd), returning the created promotion's id. A customer-initiated request always
+    // requires admin moderation (see PromotionService#resolveCreationPlan) even though the real
+    // EZCLASS_LAUNCH_FREE launch campaign (live by default since V27) makes this plan free - FREE
+    // only zeroes the charged price, it never bypasses approval, so this always goes through the
+    // Tuition-scoped approve endpoint rather than assuming creation already activated it.
     private long activateSearchBoost(long adId) throws Exception {
         String kamalToken = loginAndGetToken("kamal", "customer123");
         String adminToken = loginAndGetToken("admin", "admin123");
@@ -216,7 +217,7 @@ class TuitionSearchBoostRankingTests {
         long promotionId = created.get("id").asLong();
 
         if (!"ACTIVE".equals(created.get("status").asText())) {
-            mockMvc.perform(patch("/api/admin/promotions/" + promotionId + "/activate")
+            mockMvc.perform(patch("/api/admin/tuition/promotions/" + promotionId + "/approve")
                             .header("Authorization", "Bearer " + adminToken))
                     .andExpect(status().isOk());
         }

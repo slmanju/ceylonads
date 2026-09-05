@@ -3,7 +3,6 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { isAxiosError } from "axios";
 import { FaChalkboardTeacher, FaMapMarkerAlt, FaPhone, FaRegClock, FaWhatsapp } from "react-icons/fa";
 import { ImageGallery } from "../components/ImageGallery/ImageGallery";
-import { ClampedText } from "../components/ClampedText/ClampedText";
 import { LoadingState } from "../components/LoadingState/LoadingState";
 import { ErrorState } from "../components/ErrorState/ErrorState";
 import { EmptyState } from "../components/EmptyState/EmptyState";
@@ -321,7 +320,15 @@ export function ClassDetailPage() {
           {detail.description && (
             <section className="class-detail-page__description">
               <h2>About This Class</h2>
-              <ClampedText text={detail.description} maxLines={6} />
+              <div className="class-detail-page__description-text">
+                {detail.description
+                  .split(/\n{2,}/)
+                  .map((paragraph) => paragraph.trim())
+                  .filter(Boolean)
+                  .map((paragraph, index) => (
+                    <p key={index}>{paragraph}</p>
+                  ))}
+              </div>
             </section>
           )}
         </div>

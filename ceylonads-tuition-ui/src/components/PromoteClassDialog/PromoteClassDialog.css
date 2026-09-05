@@ -1,0 +1,119 @@
+.promote-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.promote-dialog__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 17, 11, 0.5);
+  border: none;
+}
+
+.promote-dialog__panel {
+  position: relative;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: min(440px, 90vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.promote-dialog__title {
+  font-size: 1.1rem;
+}
+
+.promote-dialog__class {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.promote-dialog__thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.promote-dialog__thumb--placeholder {
+  background: var(--color-border);
+}
+
+.promote-dialog__class-info {
+  min-width: 0;
+}
+
+.promote-dialog__class-title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.promote-dialog__class-meta {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.promote-dialog__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.promote-dialog__field select {
+  font: inherit;
+  font-weight: 400;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.promote-dialog__plan-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+  background: var(--color-surface-soft);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.promote-dialog__plan-details dt {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.promote-dialog__plan-details dd {
+  font-weight: 600;
+}
+
+.promote-dialog__price--discounted {
+  color: var(--color-primary);
+}
+
+.promote-dialog__error {
+  color: var(--color-danger);
+  font-size: 0.85rem;
+}
+
+.promote-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}

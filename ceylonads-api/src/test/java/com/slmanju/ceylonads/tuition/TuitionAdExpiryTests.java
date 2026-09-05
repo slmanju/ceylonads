@@ -375,10 +375,27 @@ class TuitionAdExpiryTests {
                 .andReturn().getResponse().getContentAsString();
         JsonNode created = objectMapper.readTree(response);
         long promotionId = created.get("id").asLong();
-        if ("ACTIVE".equals(created.get("status").asText())) {
+        String status = created.get("status").asText();
+        if ("ACTIVE".equals(status)) {
             return Instant.parse(created.get("endsAt").asText());
         }
+        // FREE only zeroes the price - a customer request still requires admin approval (see
+        // PromotionService#resolveCreationPlan), so a free Tuition plan lands PENDING_APPROVAL, not
+        // PENDING_PAYMENT; approve() is the Tuition-scoped equivalent of activateAsAdmin() below for
+        // that path.
+        if ("PENDING_APPROVAL".equals(status)) {
+            return approveAsAdminPromotion(promotionId);
+        }
         return activateAsAdmin(promotionId);
+    }
+
+    private Instant approveAsAdminPromotion(long promotionId) throws Exception {
+        String adminToken = loginAndGetToken("admin", "admin123");
+        String response = mockMvc.perform(patch("/api/admin/tuition/promotions/" + promotionId + "/approve")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return Instant.parse(objectMapper.readTree(response).get("endsAt").asText());
     }
 
     private long compatiblePlanIdByCode(String token, long adId, String code) throws Exception {

@@ -99,12 +99,12 @@ class AdminTuitionPromotionControllerTests {
                 .andExpect(jsonPath("$.status").value("CANCELLED"));
     }
 
-    // The ezClass launch campaign (100% off every current Tuition plan) can make a newly-created
-    // promotion auto-activate immediately, skipping PENDING_APPROVAL entirely (see
-    // PromotionService.resolveCreationPlan) - forcing this state directly keeps the
-    // approve/reject tests deterministic regardless of which campaigns happen to be active when
-    // this test runs, the same way TuitionAdExpiryTests.forceExpiry forces expiry state directly
-    // rather than waiting on real time.
+    // A customer-created Tuition promotion always lands PENDING_APPROVAL by the time this runs
+    // (the ezClass launch campaign only zeroes the price, it never bypasses approval - see
+    // PromotionService.resolveCreationPlan), but forcing the state directly here keeps these
+    // approve/reject tests deterministic regardless of which campaigns/plan flags happen to be
+    // configured when this test runs, the same way TuitionAdExpiryTests.forceExpiry forces expiry
+    // state directly rather than waiting on real time.
     private void forcePendingApproval(long promotionId) {
         Promotion promotion = promotions.findById(promotionId).orElseThrow();
         promotion.seedLifecycleOverride(PromotionStatus.PENDING_APPROVAL, null, null);
@@ -148,15 +148,11 @@ class AdminTuitionPromotionControllerTests {
         return objectMapper.readTree(response).get("id").asLong();
     }
 
-    // EZCLASS_LAUNCH_FREE (100% off) is live on every current Tuition plan, so any compatible plan
-    // auto-activates on creation with 0 payment/approval required - fine for the "list/approve
-    // works" test, but the reject/pending-review tests need a promotion that actually lands in
-    // PENDING_APPROVAL. Picking the highest-priced compatible plan doesn't change that under a
-    // 100%-off campaign, so instead these tests just verify the endpoints on whatever status the
-    // promotion lands in - approve() and reject() both require PENDING_APPROVAL, so if the launch
-    // campaign is still active at test time the promotion is already ACTIVE and approve() would
-    // 400. To keep this deterministic regardless of campaign state, resolve the plan's
-    // currently-compatible id via the API rather than hardcoding a status assumption.
+    // A customer-created promotion always lands PENDING_APPROVAL regardless of whether
+    // EZCLASS_LAUNCH_FREE (100% off) happens to be active - FREE only zeroes the price, it never
+    // bypasses approval (see PromotionService#resolveCreationPlan). Resolving the plan's
+    // currently-compatible id via the API (rather than hardcoding one) just keeps this robust to
+    // whichever Tuition plans/campaigns are configured when this test runs.
     private long tuitionSearchTopPlanId(String token) throws Exception {
         String response = mockMvc.perform(get("/api/tuition/promotions/plans").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())

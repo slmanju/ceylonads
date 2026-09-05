@@ -55,6 +55,13 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
 
     boolean existsByAdIdAndPlan_SlotAndStatusIn(Long adId, PromotionSlot slot, Collection<PromotionStatus> statuses);
 
+    // Admin "Promote Class" duplicate check (see PromotionService#createAdminPromotionForTuitionClass):
+    // the conflicting promotion itself, not just whether one exists, so the rejection message can
+    // name its plan and end date.
+    @EntityGraph(attributePaths = {"plan"})
+    Optional<Promotion> findFirstByAdIdAndPlan_SlotAndStatusInOrderByEndsAtDesc(
+            Long adId, PromotionSlot slot, Collection<PromotionStatus> statuses);
+
     // DEV-only: lets SampleDataSeeder find promotions on ads it's about to clean up (stale Tuition
     // sample ads) so they can be deleted before the ad itself is removed.
     List<Promotion> findByAdIdIn(Collection<Long> adIds);

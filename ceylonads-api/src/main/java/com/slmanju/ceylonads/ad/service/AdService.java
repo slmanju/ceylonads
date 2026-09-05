@@ -323,7 +323,12 @@ public class AdService {
         return ads.expireOverdue(channel, Instant.now());
     }
 
-    private Ad requireAny(Long id, SourceChannel restrictToChannel) {
+    // Public (not just used internally by approve/reject/getForAdmin/adminDeactivate above): also
+    // used by PromotionService#createAdminPromotionForTuitionClass to resolve the class entity
+    // (owner, status, expiry) for the Tuition admin console's "Promote Class" action - same 404,
+    // never-leak-cross-channel-existence shape as every other admin lookup here.
+    @Transactional(readOnly = true)
+    public Ad requireAny(Long id, SourceChannel restrictToChannel) {
         Ad ad = ads.findDetailById(id).orElseThrow(() -> new NotFoundException("Ad not found"));
         if (restrictToChannel != null && ad.getSourceChannel() != restrictToChannel) {
             throw new NotFoundException("Ad not found");

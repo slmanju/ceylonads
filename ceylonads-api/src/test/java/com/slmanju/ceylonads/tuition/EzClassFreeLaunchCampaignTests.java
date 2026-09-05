@@ -34,9 +34,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Covers the EZCLASS_LAUNCH_FREE campaign seeded by V27__ezclass_free_launch_campaign.sql: it is
  * the real, live-by-default TUITION launch offer (100% off, Rs. 0 floor) covering all seven Tuition
  * promotion products for [starts_at, ends_at). Verifies campaign-window resolution via
- * GET /api/tuition/promotions/campaign and GET /api/tuition/promotions/plans, and that purchasing a
- * plan while it is active skips payment entirely and activates immediately with a Rs. 0 charge -
- * see PromotionService#resolveCreationPlan.
+ * GET /api/tuition/promotions/campaign and GET /api/tuition/promotions/plans, and that a customer
+ * request for a plan while it is active skips payment entirely (Rs. 0 charge, no Payment row) but
+ * still requires admin approval before activating - FREE only zeroes the price, it never bypasses
+ * moderation (see PromotionService#resolveCreationPlan). Also covers the admin approval step
+ * itself, and contrasts customer-request lifecycle against the admin "Promote Class" direct-activate
+ * path under both free and normal paid pricing.
  */
 @SpringBootTest
 @ActiveProfiles({"local", "test"})
@@ -125,7 +128,7 @@ class EzClassFreeLaunchCampaignTests {
     }
 
     @Test
-    void purchasingAPlanDuringTheFreeLaunchActivatesImmediatelyWithZeroChargeAndNoPayment() throws Exception {
+    void purchasingAPlanDuringTheFreeLaunchStillRequiresAdminApprovalWithZeroChargeAndNoPayment() throws Exception {
         String token = registerAndGetToken();
         long adId = createApprovedTuitionClass(token, "Free Launch Purchase " + UUID.randomUUID());
 
@@ -138,21 +141,118 @@ class EzClassFreeLaunchCampaignTests {
                 .andReturn().getResponse().getContentAsString();
         JsonNode created = objectMapper.readTree(createResponse);
 
-        assertEquals("ACTIVE", created.get("status").asText(), "a Rs. 0 promotion must activate immediately");
+        // FREE means chargedPrice = 0, not an implicit admin approval - a customer-initiated
+        // request still requires moderation exactly like a paid one would (see
+        // PromotionService#resolveCreationPlan; this is the production bug this test now guards).
+        assertEquals("PENDING_APPROVAL", created.get("status").asText(), "a free promotion still requires admin approval");
         assertEquals(0, BigDecimal.ZERO.compareTo(new BigDecimal(created.get("price").asText())));
         assertEquals("TUITION_SEARCH_BOOST_30D", created.get("promotionPlanCode").asText());
         assertEquals("TUITION_SEARCH_BOOST", created.get("slotCode").asText());
         assertEquals(30, created.get("durationDays").asInt());
         assertFalse(created.get("paymentWaived").asBoolean(), "genuinely free, not an admin-waived payment");
-
-        Instant endsAt = Instant.parse(created.get("endsAt").asText());
-        Ad ad = ads.findById(adId).orElseThrow();
-        assertFalse(ad.getExpiresAt().isBefore(endsAt), "ad expiry must cover the full paid-duration guarantee");
+        assertTrue(created.get("startsAt").isNull(), "the paid period must not start before admin approval");
+        assertTrue(created.get("endsAt").isNull(), "the paid period must not start before admin approval");
 
         long promotionId = created.get("id").asLong();
         assertTrue(payments.findAllByOrderByCreatedAtDesc().stream()
                         .noneMatch(p -> p.getPromotion().getId().equals(promotionId)),
                 "a free promotion must never create a Payment row");
+    }
+
+    @Test
+    void adminApprovingAFreeLaunchPromotionActivatesItFromTheApprovalTimeAndExtendsClassExpiry() throws Exception {
+        String token = registerAndGetToken();
+        long adId = createApprovedTuitionClass(token, "Free Launch Approval " + UUID.randomUUID());
+        long planId = compatiblePlanIdByCode(token, adId, "TUITION_SEARCH_BOOST_30D");
+
+        String createResponse = mockMvc.perform(post("/api/tuition/promotions")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("adId", adId, "promotionPlanId", planId))))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        long promotionId = objectMapper.readTree(createResponse).get("id").asLong();
+
+        String adminToken = loginAndGetToken("admin", "admin123");
+        String approveResponse = mockMvc.perform(patch("/api/admin/tuition/promotions/" + promotionId + "/approve")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.startsAt").isNotEmpty())
+                .andExpect(jsonPath("$.endsAt").isNotEmpty())
+                .andReturn().getResponse().getContentAsString();
+        JsonNode approved = objectMapper.readTree(approveResponse);
+        // The price snapshotted at request time must survive approval unchanged - approval never
+        // recharges or re-resolves pricing.
+        assertEquals(0, BigDecimal.ZERO.compareTo(new BigDecimal(approved.get("price").asText())));
+
+        Instant endsAt = Instant.parse(approved.get("endsAt").asText());
+        Ad ad = ads.findById(adId).orElseThrow();
+        assertFalse(ad.getExpiresAt().isBefore(endsAt), "ad expiry must cover the full paid-duration guarantee once approved");
+    }
+
+    @Test
+    @Transactional
+    void customerRequestUnderNormalPaidPricingAlsoRequiresApprovalNotJustPayment() throws Exception {
+        Instant now = Instant.now();
+        updateLaunchCampaignWindow(now.minus(2, ChronoUnit.HOURS), now.minus(1, ChronoUnit.HOURS));
+
+        String token = registerAndGetToken();
+        long adId = createApprovedTuitionClass(token, "Paid Pricing Purchase " + UUID.randomUUID());
+        long planId = compatiblePlanIdByCode(token, adId, "TUITION_SEARCH_BOOST_30D");
+
+        // Every current Tuition plan has paymentRequired=true AND approvalRequired=true (validated
+        // at the plan level), so once the free campaign is out of its window, a real charge is due
+        // first - PENDING_PAYMENT, not PENDING_APPROVAL. The approval step still happens, just via
+        // the payment-confirmation path rather than a second explicit review (see
+        // PromotionService#resolveCreationPlan).
+        mockMvc.perform(post("/api/tuition/promotions")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("adId", adId, "promotionPlanId", planId))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("PENDING_PAYMENT"))
+                .andExpect(jsonPath("$.price").value(2990.0))
+                .andExpect(jsonPath("$.startsAt").doesNotExist())
+                .andExpect(jsonPath("$.endsAt").doesNotExist());
+    }
+
+    @Test
+    @Transactional
+    void adminCreatedPromotionActivatesImmediatelyEvenUnderNormalPaidPricing() throws Exception {
+        Instant now = Instant.now();
+        updateLaunchCampaignWindow(now.minus(2, ChronoUnit.HOURS), now.minus(1, ChronoUnit.HOURS));
+
+        String token = registerAndGetToken();
+        long adId = createApprovedTuitionClass(token, "Admin Promote Paid " + UUID.randomUUID());
+
+        String adminToken = loginAndGetToken("admin", "admin123");
+        long planId = tuitionPlanIdByCode(adminToken, "TUITION_SEARCH_BOOST_30D");
+
+        // The admin's own "Promote Class" action is itself the approval (createAdminPromotionForTuitionClass
+        // bypasses resolveCreationPlan entirely), so it activates immediately regardless of price -
+        // unlike the customer-request path above, which needed PENDING_PAYMENT under the same pricing.
+        mockMvc.perform(post("/api/admin/tuition/ads/" + adId + "/promotions")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("promotionPlanId", planId))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.price").value(2990.0));
+    }
+
+    private long tuitionPlanIdByCode(String adminToken, String code) throws Exception {
+        String response = mockMvc.perform(get("/api/admin/tuition/promotion-plans")
+                        .param("scope", "ALL")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        for (JsonNode node : objectMapper.readTree(response)) {
+            if (node.get("code").asText().equals(code)) {
+                return node.get("id").asLong();
+            }
+        }
+        throw new IllegalStateException(code + " plan not found");
     }
 
     // --- helpers --------------------------------------------------------------------------------

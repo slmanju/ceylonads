@@ -34,7 +34,15 @@
   gap: 10px;
 }
 
+.tuition-admin-pending__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .tuition-admin-pending__row {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -45,6 +53,19 @@
   padding: 14px 18px;
   text-decoration: none;
   color: inherit;
+}
+
+.tuition-admin-pending__promote {
+  flex-shrink: 0;
+}
+
+.tuition-admin-pending__success {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: #e6f4ee;
+  color: var(--color-success);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
 }
 
 .tuition-admin-pending__row:hover {

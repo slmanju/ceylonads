@@ -65,7 +65,7 @@ export function AdminPromotionReviewPage() {
       await rejectPromotion(promotion.id);
       navigate("/admin/tuition/promotions");
     } catch (err) {
-      setActionError(getApiErrorMessage(err, "Could not reject this promotion."));
+      setActionError(getApiErrorMessage(err, isActive ? "Could not deactivate this promotion." : "Could not reject this promotion."));
       setShowReject(false);
     } finally {
       setActionLoading(false);
@@ -76,6 +76,7 @@ export function AdminPromotionReviewPage() {
   if (error || !promotion) return <ErrorState title="Promotion not found" message={error ?? "This promotion is unavailable."} />;
 
   const canReview = promotion.status === "PENDING_PAYMENT" || promotion.status === "PENDING_APPROVAL";
+  const isActive = promotion.status === "ACTIVE";
 
   return (
     <div className="tuition-admin-promo-review">
@@ -128,6 +129,10 @@ export function AdminPromotionReviewPage() {
               <dt>Requested</dt>
               <dd>{formatFullDate(promotion.createdAt)}</dd>
             </div>
+            <div>
+              <dt>Source</dt>
+              <dd>{promotion.createdByAdminUsername ? `Admin (${promotion.createdByAdminUsername})` : "Customer request"}</dd>
+            </div>
             {ad && (
               <>
                 <div>
@@ -155,18 +160,20 @@ export function AdminPromotionReviewPage() {
             </div>
           )}
 
-          {canReview && (
+          {(canReview || isActive) && (
             <div className="tuition-admin-promo-review__actions">
-              <button type="button" className="btn btn-primary" disabled={actionLoading} onClick={handleApprove}>
-                Approve
-              </button>
+              {canReview && (
+                <button type="button" className="btn btn-primary" disabled={actionLoading} onClick={handleApprove}>
+                  Approve
+                </button>
+              )}
               <button
                 type="button"
                 className="btn btn-outline"
                 disabled={actionLoading}
                 onClick={() => setShowReject(true)}
               >
-                Reject
+                {isActive ? "Deactivate" : "Reject"}
               </button>
             </div>
           )}
@@ -175,9 +182,13 @@ export function AdminPromotionReviewPage() {
 
       <ConfirmDialog
         open={showReject}
-        title="Reject this promotion?"
-        message="It will not be published and will never render publicly. The record is kept, not deleted."
-        confirmLabel="Reject Promotion"
+        title={isActive ? "Deactivate this promotion?" : "Reject this promotion?"}
+        message={
+          isActive
+            ? "It will stop rendering publicly immediately. The record is kept, not deleted."
+            : "It will not be published and will never render publicly. The record is kept, not deleted."
+        }
+        confirmLabel={isActive ? "Deactivate Promotion" : "Reject Promotion"}
         danger
         loading={actionLoading}
         onConfirm={confirmReject}

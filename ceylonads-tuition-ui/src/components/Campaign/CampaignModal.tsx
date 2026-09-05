@@ -3,11 +3,16 @@ import { FaTimes } from "react-icons/fa";
 import { useCampaign } from "../../campaign/CampaignContext";
 import { useCampaignCta } from "../../campaign/useCampaignCta";
 import { dismissCampaign, isCampaignDismissed } from "../../campaign/campaignDismissal";
+import { CURRENT_PROMOTION_PLAN_DURATION_DAYS, formatCampaignDurationLabel } from "../../utils/campaignDuration";
+import { formatFullDate } from "../../utils/formatDate";
 import "./CampaignModal.css";
 
 // Renders only when the backend campaign says so (showModal) and the visitor hasn't already
-// dismissed THIS campaign (by code, see campaignDismissal.ts) - no campaign-specific copy is
-// hardcoded here, and headline/message are never derived from pricing values.
+// dismissed THIS campaign (by code, see campaignDismissal.ts) - name/headline/message/ctaLabel are
+// never hardcoded here. The two lines below them ARE added here: they exist specifically to keep a
+// customer from confusing "the free launch campaign runs for ~3 months" with "each promotion you
+// buy runs for 30 days" - see PromotionPlanCard, which draws the same distinction on every plan
+// card.
 export function CampaignModal() {
   const { campaign } = useCampaign();
   const handleCta = useCampaignCta();
@@ -36,6 +41,8 @@ export function CampaignModal() {
     handleCta();
   };
 
+  const durationLabel = formatCampaignDurationLabel(campaign.startsAt, campaign.endsAt);
+
   return (
     <div className="campaign-modal-overlay" role="presentation" onClick={handleClose}>
       <div
@@ -53,6 +60,15 @@ export function CampaignModal() {
           {campaign.headline}
         </h2>
         <p className="campaign-modal__message">{campaign.message}</p>
+        {campaign.endsAt && (
+          <p className="campaign-modal__window">
+            Offer valid until {formatFullDate(campaign.endsAt)}
+            {durationLabel && ` (${durationLabel} launch period)`}.
+          </p>
+        )}
+        <p className="campaign-modal__plan-duration">
+          Each promotion you choose runs for {CURRENT_PROMOTION_PLAN_DURATION_DAYS} days.
+        </p>
         <button type="button" className="campaign-modal__cta" onClick={handleCtaClick}>
           {campaign.ctaLabel}
         </button>

@@ -125,10 +125,19 @@
   display: none;
 }
 
-.class-detail-page__description p {
+.class-detail-page__description-text {
+  font-size: 0.95rem;
   color: var(--color-text);
-  line-height: 1.6;
-  white-space: pre-wrap;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.class-detail-page__description-text p {
+  margin: 0 0 12px;
+}
+
+.class-detail-page__description-text p:last-child {
+  margin-bottom: 0;
 }
 
 /* Normal document flow, not sticky: the rail now holds several real cards (contact, details,

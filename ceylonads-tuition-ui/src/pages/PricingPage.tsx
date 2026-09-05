@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { FaBolt } from "react-icons/fa";
 import { useAuth } from "../auth/AuthContext";
 import { useCampaign } from "../campaign/CampaignContext";
 import { useCampaignCta } from "../campaign/useCampaignCta";
@@ -7,15 +6,12 @@ import { listTuitionPromotionPlans } from "../api/promotionApi";
 import { LoadingState } from "../components/LoadingState/LoadingState";
 import { ErrorState } from "../components/ErrorState/ErrorState";
 import { Seo } from "../components/Seo/Seo";
+import { PromotionPlanCard } from "../components/PromotionPlanCard/PromotionPlanCard";
 import type { CompatiblePromotionPlanResponse } from "../types/api";
-import { formatPrice, formatPromotionPrice } from "../utils/formatPrice";
 import { formatFullDate } from "../utils/formatDate";
+import { sortByPromotionDisplayOrder } from "../utils/promotionDisplay";
+import { CURRENT_PROMOTION_PLAN_DURATION_DAYS, formatCampaignDurationLabel } from "../utils/campaignDuration";
 import "./PricingPage.css";
-
-// Plan codes are stable backend identifiers (like a slug - see tuition CLAUDE.md "Categories")
-// used only to give the two search-discovery products slightly stronger visual emphasis. No
-// price, availability, or campaign logic ever branches on these.
-const SEARCH_PLAN_CODES = new Set(["TUITION_SEARCH_TOP_30D", "TUITION_SEARCH_BOOST_30D"]);
 
 export function PricingPage() {
   const { isAuthenticated } = useAuth();
@@ -39,6 +35,8 @@ export function PricingPage() {
     loadPlans();
   }, []);
 
+  const campaignDurationLabel = campaign ? formatCampaignDurationLabel(campaign.startsAt, campaign.endsAt) : null;
+
   return (
     <div className="pricing-page container">
       <Seo
@@ -48,25 +46,32 @@ export function PricingPage() {
 
       <div className="pricing-page__header">
         <h1 className="pricing-page__title">Promotion Pricing</h1>
-        <p className="pricing-page__subtitle">Get more visibility for your tuition classes.</p>
+        <p className="pricing-page__subtitle">
+          Choose where you want your class to get extra visibility. During our launch period, all promotions are
+          FREE.
+        </p>
+        <p className="pricing-page__tip">
+          Not sure which one to choose? <strong>Search Boost</strong> is a good starting option because it places
+          your class higher when students search for matching classes.
+        </p>
 
         {campaign && (
           <div className="pricing-page__campaign">
-            <span className="pricing-page__campaign-name">{campaign.name}</span>
+            <span className="pricing-page__campaign-name">
+              {campaignDurationLabel ? `${campaignDurationLabel} Free Launch Promotion` : campaign.name}
+            </span>
             <p className="pricing-page__campaign-headline">{campaign.headline}</p>
             {campaign.message && <p className="pricing-page__campaign-message">{campaign.message}</p>}
             {campaign.endsAt && (
-              <p className="pricing-page__campaign-ends">Offer valid until {formatFullDate(campaign.endsAt)}</p>
+              <p className="pricing-page__campaign-ends">
+                All eligible promotion placements are free until {formatFullDate(campaign.endsAt)}.
+              </p>
             )}
+            <p className="pricing-page__campaign-plan-duration">
+              Each promotion you choose runs for {CURRENT_PROMOTION_PLAN_DURATION_DAYS} days.
+            </p>
           </div>
         )}
-      </div>
-
-      <div className="pricing-page__free-notice">
-        <p>
-          <strong>Posting your tuition class is free.</strong> Promotion is optional and gives your class additional
-          visibility across ezClass.
-        </p>
       </div>
 
       {loading && <LoadingState label="Loading promotion pricing…" />}
@@ -75,55 +80,18 @@ export function PricingPage() {
 
       {!loading && !loadError && (
         <div className="pricing-page__grid">
-          {plans.map(({ plan, available, remainingCapacity }) => {
-            const emphasised = SEARCH_PLAN_CODES.has(plan.code);
-            return (
-              <div
-                key={plan.id}
-                className={`pricing-card${emphasised ? " pricing-card--emphasised" : ""}`}
-              >
-                {emphasised && (
-                  <span className="pricing-card__visibility-badge">
-                    <FaBolt aria-hidden="true" /> High Visibility
-                  </span>
-                )}
-                <h2 className="pricing-card__name">{plan.name}</h2>
-                <p className="pricing-card__description">{plan.description}</p>
-                <p className="pricing-card__duration">{plan.durationDays} days</p>
-
-                <div className="pricing-card__price-block">
-                  {plan.discounted ? (
-                    <>
-                      <p className="pricing-card__price-normal-label">Normal price</p>
-                      <p className="pricing-card__price-normal-amount">{formatPrice(plan.price)}</p>
-                      {plan.campaignName && (
-                        <span className="pricing-card__offer-badge">{plan.campaignName}</span>
-                      )}
-                      <p className="pricing-card__price pricing-card__price--current">
-                        {formatPromotionPrice(plan.currentPrice)}
-                      </p>
-                      <p className="pricing-card__savings">Save {formatPrice(plan.discountAmount)}</p>
-                    </>
-                  ) : (
-                    <p className="pricing-card__price">{formatPrice(plan.price)}</p>
-                  )}
-                </div>
-
-                <p className="pricing-card__availability">
-                  {available ? `${remainingCapacity} of ${plan.slotCapacity} remaining` : "Sold Out"}
-                </p>
-
-                <button
-                  type="button"
-                  className="btn btn-accent pricing-card__cta"
-                  disabled={!available}
-                  onClick={handlePromoteCta}
-                >
-                  {available ? "Promote a Class" : "Sold Out"}
-                </button>
-              </div>
-            );
-          })}
+          {sortByPromotionDisplayOrder(plans, (p) => p.plan.code).map(({ plan, available }) => (
+            <PromotionPlanCard
+              key={plan.id}
+              plan={plan}
+              available={available}
+              ctaLabel="Promote a Class"
+              unavailableCtaLabel="Sold Out"
+              unavailableLabel="Sold out for now"
+              onSelect={handlePromoteCta}
+              campaignDurationLabel={campaignDurationLabel}
+            />
+          ))}
         </div>
       )}
 

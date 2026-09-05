@@ -40,6 +40,7 @@ public class PromotionMapper {
                 promotion.getDurationDays(),
                 plan.isPaymentRequired(),
                 promotion.isPaymentWaived(),
+                promotion.getCreatedByAdminUsername(),
                 promotion.getStatus(),
                 promotion.getCreatedAt(),
                 promotion.getStartsAt(),

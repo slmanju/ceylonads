@@ -33,6 +33,7 @@ import com.slmanju.ceylonads.promotion.mapper.PromotionMapper;
 import com.slmanju.ceylonads.promotion.mapper.PromotionPlanMapper;
 import com.slmanju.ceylonads.promotion.repository.PromotionPlanRepository;
 import com.slmanju.ceylonads.promotion.repository.PromotionRepository;
+import com.slmanju.ceylonads.tuition.TuitionPromotionCatalog;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.AccessDeniedException;
@@ -42,6 +43,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -386,15 +389,34 @@ public class PromotionService {
     @Transactional
     public PromotionResponse adminApprove(Long id) {
         Promotion promotion = requireAny(id);
+        requireApprovable(promotion);
+        activateWithCapacityCheck(promotion);
+        return mapper.toResponse(promotion);
+    }
+
+    // Re-verifies everything that could have changed between request time and approval time - the
+    // request could be minutes or days old by the time an admin reviews it: the promotion itself
+    // must still be awaiting approval, its plan must still be offered, and (for an ad-linked
+    // promotion) the underlying ad must still be active and, for Tuition, not have expired in the
+    // meantime (mirrors the same expiry guard createForAd applies at request time). Shared by both
+    // adminApprove overloads below so channel-scoped and cross-channel approval can never diverge.
+    private void requireApprovable(Promotion promotion) {
         if (promotion.getStatus() != PromotionStatus.PENDING_APPROVAL) {
             throw new BadRequestException("Only promotions pending approval can be approved");
         }
-        if (promotion.getKind() == PromotionKind.AD_PROMOTION
-                && promotion.getAd().getStatus() != AdStatus.ACTIVE) {
-            throw new BadRequestException("The ad for this promotion is no longer active");
+        if (!promotion.getPlan().isActive()) {
+            throw new BadRequestException("This promotion plan is no longer available");
         }
-        activateWithCapacityCheck(promotion);
-        return mapper.toResponse(promotion);
+        if (promotion.getKind() == PromotionKind.AD_PROMOTION) {
+            Ad ad = promotion.getAd();
+            if (ad.getStatus() != AdStatus.ACTIVE) {
+                throw new BadRequestException("The ad for this promotion is no longer active");
+            }
+            if (ad.getSourceChannel() == SourceChannel.TUITION
+                    && ad.getExpiresAt() != null && !ad.getExpiresAt().isAfter(Instant.now())) {
+                throw new BadRequestException("This class has expired and can no longer be promoted");
+            }
+        }
     }
 
     @Transactional
@@ -404,6 +426,64 @@ public class PromotionService {
             throw new BadRequestException("This promotion cannot be cancelled");
         }
         promotion.cancel();
+        return mapper.toResponse(promotion);
+    }
+
+    private static final DateTimeFormatter ADMIN_PROMOTION_CONFLICT_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("MMM d, yyyy").withZone(ZoneOffset.UTC);
+
+    /**
+     * The Tuition admin console's direct "Promote Class" action (AdminTuitionAdsController) -
+     * distinct from {@link #adminCreate}, which still requires a client-supplied customerId and
+     * leaves initial status up to {@link #resolveCreationPlan}. Here the admin's action is itself
+     * the approval: the promotion always activates immediately regardless of the plan's
+     * payment_required/approval_required flags, and the owner is always resolved from the class
+     * itself (never the acting admin, never client-supplied) - see class javadoc invariants this
+     * preserves: ownership, expiry protection, and duplicate-slot blocking are identical to every
+     * other creation path.
+     */
+    @Transactional
+    public PromotionResponse createAdminPromotionForTuitionClass(Long adId, Long promotionPlanId, String adminUsername) {
+        Ad ad = adService.requireAny(adId, SourceChannel.TUITION);
+        if (ad.getStatus() != AdStatus.ACTIVE) {
+            throw new BadRequestException("Only active classes can be promoted");
+        }
+        if (ad.getExpiresAt() != null && !ad.getExpiresAt().isAfter(Instant.now())) {
+            throw new BadRequestException("This class has expired and cannot be promoted until it's renewed");
+        }
+
+        PromotionPlan plan = planService.requirePlan(promotionPlanId);
+        PromotionSlot slot = plan.getSlot();
+        if (slot.getSourceChannel() != SourceChannel.TUITION) {
+            throw new BadRequestException("This promotion plan is not available for Tuition classes");
+        }
+        if (!TuitionPromotionCatalog.isCurrentPlan(slot.getCode(), plan.isActive())) {
+            throw new BadRequestException("This promotion plan is no longer available");
+        }
+        if (!slot.isActive()) {
+            throw new BadRequestException("This placement is no longer available");
+        }
+
+        promotions.findFirstByAdIdAndPlan_SlotAndStatusInOrderByEndsAtDesc(ad.getId(), slot, BLOCKING_STATUSES)
+                .ifPresent(conflict -> {
+                    String suffix = conflict.getEndsAt() != null
+                            ? " until " + ADMIN_PROMOTION_CONFLICT_DATE_FORMAT.format(conflict.getEndsAt())
+                            : "";
+                    throw new BadRequestException("This class already has "
+                            + (conflict.getStatus() == PromotionStatus.ACTIVE ? "an active " : "a pending ")
+                            + conflict.getPlan().getName() + " promotion" + suffix + ". Choose a different promotion product.");
+                });
+
+        BigDecimal chargedPrice = pricingService.resolve(plan, Instant.now()).effectivePrice();
+        // Placeholder initial status, same as the auto-activate branch of resolveCreationPlan:
+        // activateWithCapacityCheck below overwrites it immediately. paymentWaived=true mirrors
+        // adminCreate's own admin-bypass semantics - the price is still snapshotted for audit even
+        // though no payment step runs.
+        Promotion promotion = new Promotion(
+                ad, ad.getSeller(), plan, chargedPrice, plan.getDurationDays(), PromotionStatus.PENDING_PAYMENT, true);
+        promotion.markAdminCreated(adminUsername);
+        promotion = promotions.save(promotion);
+        activateWithCapacityCheck(promotion);
         return mapper.toResponse(promotion);
     }
 
@@ -437,13 +517,7 @@ public class PromotionService {
     @Transactional
     public PromotionResponse adminApprove(Long id, SourceChannel restrictToChannel) {
         Promotion promotion = requireAny(id, restrictToChannel);
-        if (promotion.getStatus() != PromotionStatus.PENDING_APPROVAL) {
-            throw new BadRequestException("Only promotions pending approval can be approved");
-        }
-        if (promotion.getKind() == PromotionKind.AD_PROMOTION
-                && promotion.getAd().getStatus() != AdStatus.ACTIVE) {
-            throw new BadRequestException("The ad for this promotion is no longer active");
-        }
+        requireApprovable(promotion);
         activateWithCapacityCheck(promotion);
         return mapper.toResponse(promotion);
     }
@@ -576,17 +650,20 @@ public class PromotionService {
     }
 
     // chargedPrice is the amount actually resolved for this purchase (base price, or a campaign's
-    // discounted price - possibly zero). A plan's payment_required/approval_required flags describe
-    // its normal paid economics; they never apply to a promotion a live campaign has made free, so
-    // that customer is never asked to pay, or wait on approval, for something that costs nothing -
-    // see PromotionPricingService.
+    // discounted price - possibly zero). A campaign making a plan free only ever waives *payment*
+    // (effectivelyFree skips straight past the PENDING_PAYMENT branch below, since there's nothing
+    // to charge) - it must never also waive moderation: approvalRequired is evaluated unconditionally,
+    // so a free/waived customer request for a plan that normally requires review still lands in
+    // PENDING_APPROVAL, exactly like a paid one would. (Previously this branch was also gated on
+    // "&& !effectivelyFree", which made every free-campaign promotion skip approval and activate
+    // immediately regardless of the plan's approval_required flag - see the incident this fixes.)
     private CreationPlan resolveCreationPlan(PromotionPlan plan, BigDecimal chargedPrice, boolean paymentWaived) {
         boolean effectivelyFree = chargedPrice.compareTo(BigDecimal.ZERO) == 0;
         boolean paymentRequired = plan.isPaymentRequired() && !paymentWaived && !effectivelyFree;
         if (paymentRequired) {
             return new CreationPlan(PromotionStatus.PENDING_PAYMENT, true, false);
         }
-        if (plan.isApprovalRequired() && !effectivelyFree) {
+        if (plan.isApprovalRequired()) {
             return new CreationPlan(PromotionStatus.PENDING_APPROVAL, false, false);
         }
         // Initial status is a placeholder here: finishCreation() immediately activates it.

@@ -167,8 +167,9 @@ class TuitionPromotionCatalogTests {
         long planId = planIdByCode(kamalToken, SPOTLIGHT_PLAN_CODE);
 
         // The real EZCLASS_LAUNCH_FREE launch campaign (live by default since V27) makes this plan
-        // free, so the purchase auto-activates immediately - no payment/admin-activation step, see
-        // PromotionService#resolveCreationPlan.
+        // free, but FREE only zeroes the price - a customer-initiated request still requires admin
+        // approval (see PromotionService#resolveCreationPlan), so an explicit approve step is
+        // needed here before it actually surfaces publicly.
         String createResponse = mockMvc.perform(post("/api/tuition/promotions")
                         .header("Authorization", "Bearer " + kamalToken)
                         .contentType("application/json")
@@ -179,7 +180,13 @@ class TuitionPromotionCatalogTests {
         long promotionId = created.get("id").asLong();
         assertEquals(SPOTLIGHT_SLOT_CODE, created.get("slotCode").asText());
         assertEquals(0, BigDecimal.ZERO.setScale(2).compareTo(new BigDecimal(created.get("price").asText())));
-        assertEquals("ACTIVE", created.get("status").asText());
+        assertEquals("PENDING_APPROVAL", created.get("status").asText());
+
+        String adminToken = loginAndGetToken("admin", "admin123");
+        mockMvc.perform(patch("/api/admin/tuition/promotions/" + promotionId + "/approve")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ACTIVE"));
 
         // Surfaces on the exact Search Page Spotlight slot...
         mockMvc.perform(get("/api/tuition/featured").param("slot", SPOTLIGHT_SLOT_CODE))

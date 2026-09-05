@@ -30,6 +30,11 @@ public record PromotionResponse(
         // decide how to label payment status in the UI, not to reconstruct billing history.
         boolean paymentRequired,
         boolean paymentWaived,
+        // Null for a customer/tutor's own request. Set only for a promotion created directly via
+        // the Tuition admin console's "Promote Class" action - the one reliable signal
+        // distinguishing that lifecycle from a normal pending-review customer request (see
+        // Promotion#markAdminCreated).
+        String createdByAdminUsername,
         PromotionStatus status,
         Instant createdAt,
         Instant startsAt,

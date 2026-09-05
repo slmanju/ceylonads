@@ -82,9 +82,9 @@ class TuitionFeaturedTests {
     @Transactional
     void featuredExcludesPendingPromotions() throws Exception {
         String kamalToken = loginAndGetToken("kamal", "customer123");
-        // Every Tuition plan is currently free under the real EZCLASS_LAUNCH_FREE launch campaign
-        // (live by default since V27), which would auto-activate on creation - deactivate it so
-        // this plan is paid again and genuinely lands PENDING_PAYMENT, matching this test's purpose.
+        // A customer request lands PENDING_APPROVAL regardless of the launch campaign (FREE only
+        // zeroes the price, never bypasses approval) - deactivating it here instead makes this plan
+        // paid again, so the pending status under test is PENDING_PAYMENT specifically.
         deactivateLaunchCampaign();
         long adId = createApprovedAd(kamalToken, "Featured Tuition Pending " + UUID.randomUUID(), "education-tuition");
         long planId = planIdByCode(kamalToken, "TUITION_HOME_FEATURED_30D");
@@ -188,10 +188,10 @@ class TuitionFeaturedTests {
         assertFalse(card.has("attributes"));
     }
 
-    // A plan currently covered by an active free campaign (e.g. EZCLASS_LAUNCH_FREE on
-    // TUITION_HOME_FEATURED_30D - see V27) auto-activates on creation, so the admin activation step
-    // is skipped when the promotion is already ACTIVE rather than assuming every plan still requires
-    // payment.
+    // A customer request always requires admin moderation (see PromotionService#resolveCreationPlan):
+    // a plan covered by an active free campaign (e.g. EZCLASS_LAUNCH_FREE on TUITION_HOME_FEATURED_30D
+    // - see V27) lands PENDING_APPROVAL, while a genuinely paid plan lands PENDING_PAYMENT - this
+    // resolves whichever applies via the matching endpoint rather than assuming one or the other.
     private long promoteAndActivate(String customerToken, String adminToken, long adId, String planCode) throws Exception {
         long planId = planIdByCode(customerToken, planCode);
         String createResponse = mockMvc.perform(post("/api/promotions")
@@ -202,8 +202,16 @@ class TuitionFeaturedTests {
                 .andReturn().getResponse().getContentAsString();
         JsonNode created = objectMapper.readTree(createResponse);
         long promotionId = created.get("id").asLong();
+        String status = created.get("status").asText();
 
-        if (!"ACTIVE".equals(created.get("status").asText())) {
+        // FREE only zeroes the price - a customer request still requires admin approval (see
+        // PromotionService#resolveCreationPlan), so this plan (free via EZCLASS_LAUNCH_FREE) lands
+        // PENDING_APPROVAL, not PENDING_PAYMENT; approve() is the matching endpoint for that path.
+        if ("PENDING_APPROVAL".equals(status)) {
+            mockMvc.perform(patch("/api/admin/tuition/promotions/" + promotionId + "/approve")
+                            .header("Authorization", "Bearer " + adminToken))
+                    .andExpect(status().isOk());
+        } else if (!"ACTIVE".equals(status)) {
             mockMvc.perform(patch("/api/admin/promotions/" + promotionId + "/activate")
                             .header("Authorization", "Bearer " + adminToken))
                     .andExpect(status().isOk());

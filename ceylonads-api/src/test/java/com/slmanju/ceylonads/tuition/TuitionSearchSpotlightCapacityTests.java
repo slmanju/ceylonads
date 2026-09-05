@@ -86,16 +86,20 @@ class TuitionSearchSpotlightCapacityTests {
         activateNewSpotlightPromotion(customerToken, adminToken, planId);
         assertAvailability(SPOTLIGHT_PLAN_CODE, 12, 0, false);
 
-        // 13th concurrent purchase is rejected outright. The real EZCLASS_LAUNCH_FREE launch
-        // campaign (live by default since V27) makes this plan free, so it auto-activates on
-        // creation (see PromotionService#resolveCreationPlan) - capacity is therefore now enforced
-        // synchronously at purchase time rather than at a later, separate admin activation step.
+        // The 13th concurrent request is still created successfully - FREE only zeroes the price,
+        // it never bypasses admin approval, so creation itself never capacity-checks a pending
+        // request (see PromotionService#resolveCreationPlan). Capacity is instead enforced
+        // synchronously when an admin actually tries to approve it into the now-full slot.
         long thirteenthAdId = createApprovedTuitionAd(customerToken, "Spotlight Capacity Ad 13 " + UUID.randomUUID());
-        mockMvc.perform(post("/api/tuition/promotions")
+        String thirteenthResponse = mockMvc.perform(post("/api/tuition/promotions")
                         .header("Authorization", "Bearer " + customerToken)
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(Map.of("adId", thirteenthAdId, "promotionPlanId", planId))))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("PENDING_APPROVAL"))
+                .andReturn().getResponse().getContentAsString();
+        long thirteenthPromotionId = objectMapper.readTree(thirteenthResponse).get("id").asLong();
+        approve(adminToken, thirteenthPromotionId, false);
 
         // Expiring one of the 12 active promotions frees capacity for a fresh purchase.
         entityManager.createQuery("update Promotion p set p.endsAt = :past where p.id = :id")
@@ -115,8 +119,9 @@ class TuitionSearchSpotlightCapacityTests {
         String customerToken = loginAndGetToken("kamal", "customer123");
         long homeFeaturedPlanId = tuitionPlanIdByCode(HOME_FEATURED_PLAN_CODE);
 
-        // The real EZCLASS_LAUNCH_FREE launch campaign (live by default since V27) makes this plan
-        // free too, so it auto-activates on creation - no separate admin activation step needed.
+        // This promotion is only ever created, never activated - irrelevant to this test, since the
+        // point is that a promotion on a *different* slot/plan never counts against Spotlight's own
+        // capacity regardless of its own status.
         long adId = createApprovedTuitionAd(customerToken, "Home Featured Not Spotlight Ad " + UUID.randomUUID());
         promote(customerToken, adId, homeFeaturedPlanId);
 
@@ -125,9 +130,9 @@ class TuitionSearchSpotlightCapacityTests {
 
     // --- helpers --------------------------------------------------------------------------------
 
-    // The real EZCLASS_LAUNCH_FREE launch campaign (live by default since V27) makes this plan
-    // free, so it auto-activates on creation - the admin activation step is skipped when that's
-    // already happened rather than assuming the plan still requires payment.
+    // FREE only zeroes the price - a customer request still requires admin approval (see
+    // PromotionService#resolveCreationPlan), so this plan (free via EZCLASS_LAUNCH_FREE) lands
+    // PENDING_APPROVAL on creation; the actual capacity check runs when it's approved.
     private long activateNewSpotlightPromotion(String customerToken, String adminToken, long planId) throws Exception {
         long adId = createApprovedTuitionAd(customerToken, "Spotlight Capacity Ad " + UUID.randomUUID());
         String response = mockMvc.perform(post("/api/tuition/promotions")
@@ -139,7 +144,7 @@ class TuitionSearchSpotlightCapacityTests {
         JsonNode created = objectMapper.readTree(response);
         long promotionId = created.get("id").asLong();
         if (!"ACTIVE".equals(created.get("status").asText())) {
-            activate(adminToken, promotionId, true);
+            approve(adminToken, promotionId, true);
         }
         return promotionId;
     }
@@ -152,8 +157,8 @@ class TuitionSearchSpotlightCapacityTests {
                 .andExpect(jsonPath("$[?(@.plan.code == '" + planCode + "')].available").value(expectedAvailable));
     }
 
-    private void activate(String adminToken, long promotionId, boolean expectSuccess) throws Exception {
-        mockMvc.perform(patch("/api/admin/promotions/" + promotionId + "/activate")
+    private void approve(String adminToken, long promotionId, boolean expectSuccess) throws Exception {
+        mockMvc.perform(patch("/api/admin/tuition/promotions/" + promotionId + "/approve")
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(expectSuccess ? status().isOk() : status().isBadRequest());
     }
